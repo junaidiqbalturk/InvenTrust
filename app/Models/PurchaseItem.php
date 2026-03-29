@@ -5,22 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class InvoiceItem extends Model
+class PurchaseItem extends Model
 {
     use HasFactory, \App\Traits\Multitenant;
     
     protected $fillable = [
         'company_id',
-        'invoice_id',
+        'purchase_id',
         'product_id',
         'quantity',
         'unit_price',
         'subtotal',
     ];
 
-    public function invoice()
+    public function purchase()
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(Purchase::class);
     }
 
     public function product()

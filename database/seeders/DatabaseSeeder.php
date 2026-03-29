@@ -3,9 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Client;
-use App\Models\Product;
-use App\Models\TaxRule;
+use App\Models\Role;
+use App\Models\Company;
+use App\Models\Account;
+use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -16,70 +17,76 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Admin User
-        User::factory()->create([
+        // 1. Create Admin Role & Permissions
+        $adminRole = Role::create([
+            'name' => 'Admin',
+            'description' => 'Full system access',
+        ]);
+
+        $permissions = [
+            'view_inventory', 'manage_inventory',
+            'view_invoices', 'manage_sales',
+            'view_pos', 'manage_purchases',
+            'view_clients', 'manage_ledger',
+            'view_vouchers', 'manage_payments'
+        ];
+
+        foreach ($permissions as $p) {
+            $permission = \App\Models\Permission::create(['name' => $p]);
+            $adminRole->permissions()->attach($permission->id);
+        }
+
+        // 2. Create Default Company
+        $company = Company::create([
+            'company_name' => 'InvenTrust Demo',
+            'email' => 'admin@inventrust.com',
+            'industry' => 'Electronics',
+            'settings' => [
+                'enable_multi_warehouse' => false,
+                'default_warehouse_id' => null,
+            ]
+        ]);
+
+        // 3. Create Default Warehouse
+        $warehouse = Warehouse::create([
+            'name' => 'Main Warehouse',
+            'location' => 'Headquarters',
+            'company_id' => $company->id,
+            'is_active' => true,
+        ]);
+
+        // Update company with default warehouse
+        $company->update([
+            'settings' => array_merge($company->settings, [
+                'default_warehouse_id' => $warehouse->id
+            ])
+        ]);
+
+        // 4. Create Default User
+        User::create([
             'name' => 'Admin User',
             'email' => 'admin@inventrust.com',
             'password' => Hash::make('password'),
+            'company_id' => $company->id,
+            'role_id' => $adminRole->id,
+            'has_completed_onboarding' => 1,
         ]);
 
-        // Create Tax Rules
-        $vat15 = TaxRule::create([
-            'name' => 'VAT 15%',
-            'rate_percentage' => 15.00,
-            'is_active' => true,
-            'description' => 'Standard Value Added Tax'
-        ]);
+        // 4. Create Standard Chart of Accounts
+        $accounts = [
+            ['name' => 'Cash', 'code' => '1001', 'type' => 'asset'],
+            ['name' => 'Accounts Receivable', 'code' => '1200', 'type' => 'asset'],
+            ['name' => 'Inventory', 'code' => '1300', 'type' => 'asset'],
+            ['name' => 'Accounts Payable', 'code' => '2100', 'type' => 'liability'],
+            ['name' => 'Sales Revenue', 'code' => '4000', 'type' => 'income'],
+            ['name' => 'Cost of Goods Sold', 'code' => '5000', 'type' => 'expense'],
+            ['name' => 'Operating Expenses', 'code' => '6000', 'type' => 'expense'],
+        ];
 
-        $gst10 = TaxRule::create([
-            'name' => 'GST 10%',
-            'rate_percentage' => 10.00,
-            'is_active' => true,
-            'description' => 'Goods and Services Tax'
-        ]);
-
-        // Create Clients
-        Client::create([
-            'name' => 'Global Electronics Ltd',
-            'type' => 'vendor',
-            'email' => 'contact@globalelec.com',
-            'phone' => '+123456789',
-            'address' => '123 Tech Park, Silicon Valley',
-            'balance' => 0
-        ]);
-
-        Client::create([
-            'name' => 'Retail Solutions Inc',
-            'type' => 'customer',
-            'email' => 'info@retailsol.com',
-            'phone' => '+987654321',
-            'address' => '456 Main St, New York',
-            'balance' => 0
-        ]);
-
-        // Create Products
-        Product::create([
-            'name' => 'SuperTab Pro 12',
-            'sku' => 'TAB-PRO-12',
-            'price' => 899.99,
-            'stock_quantity' => 25,
-            'tax_rule_id' => $vat15->id
-        ]);
-
-        Product::create([
-            'name' => 'Wireless Headphones X5',
-            'sku' => 'HP-X5-WRL',
-            'price' => 149.50,
-            'stock_quantity' => 50,
-            'tax_rule_id' => $gst10->id
-        ]);
-
-        Product::create([
-            'name' => 'Smart Watch Series 3',
-            'sku' => 'SW-S3-BLK',
-            'price' => 299.00,
-            'stock_quantity' => 5, // Low stock alert trigger
-            'tax_rule_id' => $vat15->id
-        ]);
+        foreach ($accounts as $accountData) {
+            Account::create(array_merge($accountData, [
+                'company_id' => $company->id
+            ]));
+        }
     }
 }

@@ -5,32 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Invoice extends Model
+class Payment extends Model
 {
     use HasFactory, \App\Traits\Multitenant;
     
     protected $fillable = [
         'company_id',
-        'invoice_no',
         'party_id',
         'date',
-        'total_amount',
-        'discount',
-        'tax',
-        'final_amount',
-        'paid_amount',
-        'due_amount',
-        'status',
+        'amount',
+        'method',
+        'type',
+        'reference',
     ];
 
     public function party()
     {
         return $this->belongsTo(Party::class);
-    }
-
-    public function items()
-    {
-        return $this->hasMany(InvoiceItem::class);
     }
 
     public function ledgerEntries()
