@@ -1,66 +1,87 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# <p align="center">📦 InvenTrust ERP Solution</p>
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="C:/Users/junai/.gemini/antigravity/brain/4ac1baf5-0509-429f-80b3-68bff89bd9ee/inventrust_dashboard_mockup_1774806152248.png" width="100%" alt="InvenTrust Dashboard Mockup">
 </p>
 
-## About Laravel
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Laravel-11.x-red?style=for-the-badge&logo=laravel" alt="Laravel">
+  <img src="https://img.shields.io/badge/Next.js-15.x-black?style=for-the-badge&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/Tailwind-v4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql" alt="MySQL">
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**InvenTrust** is a premium, enterprise-grade ERP (Enterprise Resource Planning) system designed to streamline business operations with a focus on speed, security, and scalability. Built on a modern decoupled architecture using **Laravel** for the backend API and **Next.js** for a lightning-fast frontend experience.
 
-## Learning Laravel
+Whether you're managing complex multi-warehouse inventory or handling high-volume sales and purchases, InvenTrust provides the tools you need in a sleek, intuitive package.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## ✨ Key Features
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 📊 Advanced Dashboard
+- Real-time analytics and financial summaries.
+- Interactive charts for sales performance and stock valuation.
+- Quick action shortcuts for common workflows.
 
-## Laravel Sponsors
+### 🏢 Multi-Warehouse Inventory
+- Track stock levels across multiple physical locations.
+- Automatic stock movement logging and valuation.
+- Low stock alerts and automated reconciliation.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 🧾 Sales & Invoicing
+- Professional invoice generation with customizable templates.
+- **Quick-Add Contacts**: Add customers on-the-fly directly from the invoice screen.
+- Partial payment tracking and automated status updates.
 
-### Premium Partners
+### 🛒 Purchase Management
+- Streamlined supplier procurement workflows.
+- Multi-currency support and tax rule integration.
+- Automated ledger updates upon stock receiving.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 📖 Financial Ledger & Payments
+- Double-entry ledger system for audit-ready records.
+- **PDF Receipt System**: Branded, professional receipts for all payments.
+- Real-time balance tracking for all customers and suppliers.
 
-## Contributing
+### 🤖 InvenIQ integration
+- AI-assisted business insights and automated reporting.
+- Smart predictive analytics for stock forecasting.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🛠️ Technical Stack
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **Backend**: Laravel 11.x (PHP 8.3+) - Robust RESTful API.
+- **Frontend**: Next.js 15+ (React 19) - Modern SPA architecture.
+- **Styling**: Tailwind CSS v4 + Framer Motion for premium animations.
+- **UI Components**: Shadcn UI / Radix UI - Accessible and beautiful.
+- **State Management**: React Context + TanStack Table.
+- **Security**: Sanctum API authentication with Tiered RBAC (Role-Based Access Control).
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🛡️ Legal & Licensing
 
-## License
+> [!CAUTION]
+> **IMPORTANT: PROPRIETARY SOFTWARE**
+> 
+> This project is **NOT licensed under the GNU General Public License (GPL)** or any other permissive open-source license. All rights are reserved by the author.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 🛑 Usage Restrictions
+- **Forking**: Please seek explicit written permission from the owner before forking this repository.
+- **Commercial Use**: Unauthorized use of this software for commercial purposes is strictly prohibited. 
+- **Modifications**: Redistribution or commercial sale of derivative works is not permitted without a legal licensing agreement.
+
+For permission requests or commercial inquiries, please contact the repository owner directly.
+
+---
+
+<p align="center">
+  Built with ❤️ by the InvenTrust Team
+</p>
