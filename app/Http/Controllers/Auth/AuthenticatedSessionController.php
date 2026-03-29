@@ -27,11 +27,30 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
-        $request->authenticate();
+        \Illuminate\Support\Facades\Log::info('Login Attempt', [
+            'email' => $request->email,
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all(),
+        ]);
+
+        try {
+            $request->authenticate();
+            \Illuminate\Support\Facades\Log::info('Login Success', ['email' => $request->email]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Login Failed', [
+                'email' => $request->email,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
 
         $request->session()->regenerate();
+
+        if ($request->wantsJson() || $request->header('X-SPA-REQUEST')) {
+            return response()->json($request->user());
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

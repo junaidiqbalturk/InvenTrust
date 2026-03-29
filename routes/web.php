@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('clients', ClientController::class);
     Route::resource('products', ProductController::class);
     Route::resource('invoices', InvoiceController::class);
+    Route::resource('payments', PaymentController::class);
     Route::resource('tax-rules', TaxRuleController::class);
     
     Route::get('/inventory/movements', [StockMovementController::class, 'index'])->name('inventory.movements');

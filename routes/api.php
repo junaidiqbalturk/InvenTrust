@@ -1,26 +1,66 @@
 <?php
 
-use App\Http\Controllers\Api\ClientApiController;
-use App\Http\Controllers\Api\DashboardApiController;
-use App\Http\Controllers\Api\InvoiceApiController;
-use App\Http\Controllers\Api\ProductApiController;
-use App\Http\Controllers\Api\StockMovementApiController;
-use App\Http\Controllers\Api\TaxRuleApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PartyController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\Api\V1\ReportingController;
+use App\Http\Controllers\WarehouseController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
-// Feature-Based API Endpoints
+Route::post('/login', [AuthController::class , 'login']);
+Route::post('/register-company', [AuthController::class, 'registerCompany']);
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/dashboard', [DashboardApiController::class, 'index']);
+    Route::get('/user', function (Request $request) {
+        return $request->user()->load(['role.permissions', 'company']);
+    });
+    Route::post('/logout', [AuthController::class , 'logout']);
+    Route::post('/complete-onboarding', [AuthController::class, 'completeOnboarding']);
     
-    Route::apiResource('clients', ClientApiController::class);
-    Route::apiResource('products', ProductApiController::class);
-    Route::apiResource('invoices', InvoiceApiController::class)->only(['index', 'store']);
-    Route::apiResource('tax-rules', TaxRuleApiController::class);
+    // Core ERP API
+    Route::get('dashboard', [DashboardController::class , 'index']);
     
-    Route::get('/inventory/movements', [StockMovementApiController::class, 'index']);
+    Route::apiResource('products', ProductController::class);
+    Route::get('products/low-stock', [ProductController::class, 'lowStock']);
+    
+    Route::apiResource('parties', PartyController::class);
+    Route::apiResource('invoices', InvoiceController::class);
+    Route::apiResource('purchases', PurchaseController::class);
+    Route::apiResource('payments', PaymentController::class);
+    Route::apiResource('warehouses', WarehouseController::class);
+    
+    Route::get('ledger/{party}', [LedgerController::class, 'show']);
+    Route::get('ledger', [LedgerController::class, 'index']);
+
+    // Admin & Settings (Simplified)
+    Route::get('roles/permissions', [RoleController::class, 'permissions']);
+    Route::apiResource('roles', RoleController::class);
+    
+    Route::get('/company', [CompanyController::class, 'show']);
+    Route::put('/company', [CompanyController::class, 'update']);
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // Reporting & Reconciliation
+    Route::prefix('reports')->group(function () {
+        Route::get('trial-balance', [ReportingController::class, 'trialBalance']);
+        Route::get('profit-loss', [ReportingController::class, 'profitAndLoss']);
+        Route::get('balance-sheet', [ReportingController::class, 'balanceSheet']);
+        Route::get('inventory-valuation', [ReportingController::class, 'inventoryValuation']);
+    });
 });
+

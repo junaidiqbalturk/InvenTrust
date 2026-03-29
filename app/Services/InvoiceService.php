@@ -28,27 +28,31 @@ class InvoiceService
             ]);
 
             foreach ($data['items'] as $itemData) {
+                $product = Product::findOrFail($itemData['product_id']);
+                
                 $invoice->items()->create([
                     'product_id' => $itemData['product_id'],
                     'quantity' => $itemData['quantity'],
                     'unit_price' => $itemData['unit_price'],
-                    'tax_amount' => $itemData['tax_amount'],
-                    'total' => ($itemData['quantity'] * $itemData['unit_price']) + $itemData['tax_amount'],
+                    'tax_amount' => $itemData['tax_amount'] ?? 0,
+                    'total' => ($itemData['quantity'] * $itemData['unit_price']) + ($itemData['tax_amount'] ?? 0),
                 ]);
 
                 $quantityChange = $data['type'] === 'sale' ? -$itemData['quantity'] : $itemData['quantity'];
                 
-                $product = Product::find($itemData['product_id']);
                 $product->stockMovements()->create([
                     'type' => $data['type'] === 'sale' ? 'out' : 'in',
                     'quantity' => $itemData['quantity'],
                     'reference_id' => $invoice->id,
                     'reference_type' => Invoice::class,
                 ]);
+
                 $product->increment('stock_quantity', $quantityChange);
             }
 
             $amount = $data['total'];
+            $client = Client::findOrFail($data['client_id']);
+
             if ($data['type'] === 'sale') {
                 $ledgerType = 'debit';
                 $clientBalanceChange = $amount;
@@ -64,9 +68,8 @@ class InvoiceService
                 'description' => ucfirst($data['type']) . ' Invoice #' . $invoice->id,
             ]);
 
-            $client = Client::find($data['client_id']);
-            $client->balance += $clientBalanceChange;
-            $client->save();
+            $client->increment('balance', $clientBalanceChange);
+
 
             return $invoice;
         });

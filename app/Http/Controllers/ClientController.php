@@ -1,31 +1,44 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ClientController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return Inertia::render('Clients/Index', [
             'clients' => Client::all()
         ]);
     }
-    public function store(Request $request) {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:vendor,customer',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-        ]);
-        Client::create($validated);
-        return redirect()->back();
-    }
-    public function show(Client $client) {
-        $client->load('ledgerEntries.invoice', 'invoices');
+
+    public function show(Client $client)
+    {
+        $ledgerEntries = $client->ledgerEntries()
+            ->with('reference') // Reference can be Invoice, Payment, etc.
+            ->orderBy('date', 'desc')
+            ->get();
+
+        // Calculate running balance if needed, but we store it in the client and ledger
+        // For better historical accuracy, we can compute it if not stored in each entry.
+        // Current implementation uses the client's balance as the "latest".
+
         return Inertia::render('Clients/Show', [
-            'client' => $client
+            'client' => $client,
+            'ledgerEntries' => $ledgerEntries->map(function ($entry) {
+                return [
+                    'id' => $entry->id,
+                    'date' => $entry->created_at->toDateString(),
+                    'description' => $entry->description,
+                    'debit' => $entry->type === 'debit' ? $entry->amount : 0,
+                    'credit' => $entry->type === 'credit' ? $entry->amount : 0,
+                    'balance' => $entry->balance_after_transaction ?? 0, // Placeholder if we add this col
+                    'reference' => 'REF-' . $entry->id
+                ];
+            })
         ]);
     }
 }
