@@ -12,13 +12,13 @@ interface Message {
     content: string;
 }
 
-export function PulseIqWidget() {
+export function InvenIqWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "system-1",
             role: "model",
-            content: "Hello! I am PulseIQ, your financial intelligence assistant. How can I help you today?"
+            content: "Hello! I am InvenIQ, your intelligent inventory assistant. How can I help you today?"
         }
     ]);
     const [input, setInput] = useState("");
@@ -111,7 +111,7 @@ export function PulseIqWidget() {
                                     isTyping ? "w-[32px] h-[32px] scale-105 shadow-[0_0_10px_#34d399]" : 
                                     "w-[28px] h-[28px] shadow-sm"
                                 )}>
-                                    <Image src="/pulseiq-mascot.png" alt="PulseIQ" fill className="object-cover" sizes="32px" />
+                                    <Image src="/pulseiq-mascot.png" alt="InvenIQ" fill className="object-cover" sizes="32px" />
                                 </div>
                                 
                                 {/* Ping ring when idle/typing */}
@@ -119,7 +119,7 @@ export function PulseIqWidget() {
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h3 className="font-bold text-[18px] tracking-tight text-white flex items-center gap-2 drop-shadow-md">
-                                    PulseIQ 
+                                    InvenIQ 
                                     {isLoading && <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>}
                                 </h3>
                                 <p className={cn(
@@ -128,7 +128,7 @@ export function PulseIqWidget() {
                                     isTyping ? "text-teal-300" : 
                                     "text-emerald-500/80"
                                 )}>
-                                    {isLoading ? "Analyzing Data..." : isTyping ? "Listening..." : "Financial Intelligence"}
+                                    {isLoading ? "Analyzing Inventory..." : isTyping ? "Listening..." : "Inventory Intelligence"}
                                 </p>
                             </div>
                         </div>
@@ -172,7 +172,7 @@ export function PulseIqWidget() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Ask PulseIQ anything..."
+                                placeholder="Ask InvenIQ anything..."
                                 className="w-full bg-[#022A18]/60 border border-emerald-700/50 rounded-full px-5 py-3.5 text-[15px] font-medium tracking-wide text-white placeholder:text-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 pr-14 transition-all shadow-inner"
                                 disabled={isLoading}
                             />
@@ -200,7 +200,7 @@ export function PulseIqWidget() {
             >
                 {isOpen ? <X size={26} strokeWidth={2.5} className="z-20 relative text-emerald-100" /> : (
                     <div className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-500 z-10">
-                        <Image src="/pulseiq-mascot.png" alt="PulseIQ" fill className="object-cover" sizes="64px" priority />
+                        <Image src="/pulseiq-mascot.png" alt="InvenIQ" fill className="object-cover" sizes="64px" priority />
                     </div>
                 )}
                 

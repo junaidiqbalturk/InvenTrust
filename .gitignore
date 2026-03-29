@@ -17,3 +17,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/end_of_log.txt
+/tmp_log.txt
+/tmp/

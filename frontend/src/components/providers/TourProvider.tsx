@@ -12,6 +12,7 @@ interface TourStep {
     title: string;
     content: string;
     position: 'top' | 'bottom' | 'left' | 'right';
+    permission?: string;
 }
 
 interface TourContextType {
@@ -25,39 +26,60 @@ interface TourContextType {
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
 
-const TOUR_STEPS: TourStep[] = [
-    {
-        targetId: 'sidebar-dashboard',
-        title: 'Central Command',
-        content: 'Welcome to your InvenTrust Dashboard. Here you can see your real-time analytics and global trade status.',
-        position: 'right'
-    },
-    {
-        targetId: 'sidebar-imports',
-        title: 'Manage Imports',
-        content: 'Track every import shipment, manage documentation, and handle customs clearance with ease.',
-        position: 'right'
-    },
-    {
-        targetId: 'sidebar-exports',
-        title: 'Global Exports',
-        content: 'Orchestrate your outgoing trade lifecycle from sales order to final delivery.',
-        position: 'right'
-    },
-    {
-        targetId: 'company-branding',
-        title: 'Workspace Settings',
-        content: 'Personalize your workspace with your company logo and theme colors here.',
-        position: 'right'
-    }
-];
-
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, can } = useAuth();
     const [currentStep, setCurrentStep] = useState(0);
     const [isTourActive, setIsTourActive] = useState(false);
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
     const [isFinishing, setIsFinishing] = useState(false);
+
+    // Dynamic Tour Steps based on user permissions
+    const tourSteps = React.useMemo(() => {
+        const potentialSteps = [
+            {
+                targetId: 'sidebar-dashboard',
+                title: 'Central Command',
+                content: 'Welcome to your InvenTrust Dashboard. Here you can see your real-time analytics and global business status.',
+                position: 'right'
+            },
+            {
+                targetId: 'sidebar-inventory',
+                title: 'Inventory Control',
+                content: 'Manage your warehouses, monitor stock levels, and track product movements across your organization.',
+                position: 'right',
+                permission: 'view_inventory'
+            },
+            {
+                targetId: 'sidebar-sales',
+                title: 'Sales & Invoicing',
+                content: 'Create professional invoices, manage customer relationships, and track your revenue streams.',
+                position: 'right',
+                permission: 'view_invoices'
+            },
+            {
+                targetId: 'sidebar-purchases',
+                title: 'Procurement',
+                content: 'Orchestrate your supply chain by managing vendor relationships and purchase orders.',
+                position: 'right',
+                permission: 'view_pos'
+            },
+            {
+                targetId: 'sidebar-ledger',
+                title: 'Accounting Ledger',
+                content: 'Maintain a perfect audit trail with our integrated double-entry accounting system.',
+                position: 'right',
+                permission: 'view_clients'
+            },
+            {
+                targetId: 'company-branding',
+                title: 'Workspace Settings',
+                content: 'Personalize your workspace with your company logo and theme colors here.',
+                position: 'right'
+            }
+        ];
+
+        return potentialSteps.filter(step => !step.permission || (can && can(step.permission)));
+    }, [user, can]);
 
     // Start tour automatically for new users
     useEffect(() => {
@@ -72,8 +94,8 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Update target position when step changes
     useEffect(() => {
-        if (isTourActive) {
-            const element = document.getElementById(TOUR_STEPS[currentStep].targetId);
+        if (isTourActive && tourSteps[currentStep]) {
+            const element = document.getElementById(tourSteps[currentStep].targetId);
             if (element) {
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setTargetRect(element.getBoundingClientRect());
@@ -83,12 +105,14 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return () => {
             // Cleanup highlighs
-            const element = document.getElementById(TOUR_STEPS[currentStep].targetId);
-            if (element) {
-                element.classList.remove('ring-4', 'ring-primary', 'ring-offset-4', 'ring-offset-[#020617]');
+            if (tourSteps[currentStep]) {
+                const element = document.getElementById(tourSteps[currentStep].targetId);
+                if (element) {
+                    element.classList.remove('ring-4', 'ring-primary', 'ring-offset-4', 'ring-offset-[#020617]');
+                }
             }
         };
-    }, [currentStep, isTourActive]);
+    }, [currentStep, isTourActive, tourSteps]);
 
     const startTour = () => {
         setCurrentStep(0);
@@ -96,7 +120,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const nextStep = () => {
-        if (currentStep < TOUR_STEPS.length - 1) {
+        if (currentStep < tourSteps.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
             finishOnboarding();
@@ -130,7 +154,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
             {children}
             
             <AnimatePresence>
-                {isTourActive && targetRect && (
+                {isTourActive && targetRect && tourSteps[currentStep] && (
                     <div className="fixed inset-0 z-[9999] pointer-events-none">
                         {/* Overlay Backdrop with cutout hole effect */}
                         <motion.div 
@@ -147,8 +171,8 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 opacity: 1, 
                                 scale: 1, 
                                 y: 0,
-                                top: targetRect.top + (TOUR_STEPS[currentStep].position === 'bottom' ? targetRect.height + 20 : -120),
-                                left: targetRect.left + (TOUR_STEPS[currentStep].position === 'right' ? targetRect.width + 20 : 0)
+                                top: targetRect.top + (tourSteps[currentStep].position === 'bottom' ? targetRect.height + 20 : -120),
+                                left: targetRect.left + (tourSteps[currentStep].position === 'right' ? targetRect.width + 20 : 0)
                             }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="absolute pointer-events-auto w-[320px] bg-[#020617] border border-white/10 rounded-[2rem] p-6 shadow-2xl shadow-black/50 overflow-hidden"
@@ -164,16 +188,16 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                     <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30">
                                         <Sparkles className="h-5 w-5 text-primary" />
                                     </div>
-                                    <h3 className="text-white font-black tracking-tight">{TOUR_STEPS[currentStep].title}</h3>
+                                    <h3 className="text-white font-black tracking-tight">{tourSteps[currentStep].title}</h3>
                                 </div>
 
                                 <p className="text-slate-400 text-sm leading-relaxed">
-                                    {TOUR_STEPS[currentStep].content}
+                                    {tourSteps[currentStep].content}
                                 </p>
 
                                 <div className="pt-4 flex items-center justify-between gap-4">
                                     <div className="flex gap-1">
-                                        {TOUR_STEPS.map((_, i) => (
+                                        {tourSteps.map((_, i) => (
                                             <div key={i} className={`h-1 w-4 rounded-full transition-all duration-300 ${currentStep === i ? 'bg-primary' : 'bg-white/10'}`} />
                                         ))}
                                     </div>
@@ -194,7 +218,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : (
                                                 <>
-                                                    {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'}
+                                                    {currentStep === tourSteps.length - 1 ? 'Finish' : 'Next'}
                                                     <ChevronRight className="ml-1 h-4 w-4" />
                                                 </>
                                             )}

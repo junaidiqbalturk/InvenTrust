@@ -19,8 +19,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "InvenTrust",
-  description: "Trade Flow Platform",
+  title: "InvenTrust | Modern ERP & Inventory",
+  description: "The intelligent ERP system for modern businesses.",
 };
 
 export default function RootLayout({

@@ -137,6 +137,7 @@ class AccountingService
             'Accounts Receivable' => '1200',
             'Inventory' => '1300',
             'Accounts Payable' => '2100',
+            'Opening Balance Equity' => '3000',
             'Sales Revenue' => '4000',
             'COGS' => '5000',
             'Sales Tax' => '2200',

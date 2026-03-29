@@ -28,10 +28,19 @@ class ProductController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated) {
+            $initialStock = $validated['stock_quantity'] ?? 0;
+            unset($validated['stock_quantity']); 
+
+            if (!isset($validated['company_id'])) {
+                $validated['company_id'] = auth()->user()->company_id;
+            }
+
             $product = Product::create($validated);
             
-            if ($product->stock_quantity > 0) {
-                StockService::recordAdjustment($product, $product->stock_quantity, 'Initial stock on creation');
+            if ($initialStock > 0) {
+                // We reset to 0 just in case there's a default, though usually not
+                $product->stock_quantity = 0;
+                StockService::recordAdjustment($product, $initialStock, 'Initial stock on creation');
             }
             
             return $product;
@@ -57,15 +66,19 @@ class ProductController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated, $product) {
-            $oldStock = $product->stock_quantity;
+            $newStock = $validated['stock_quantity'] ?? null;
+            if (isset($validated['stock_quantity'])) {
+                unset($validated['stock_quantity']); // Handle stock separately
+            }
+
             $product->update($validated);
             
-            if (isset($validated['stock_quantity']) && $validated['stock_quantity'] != $oldStock) {
-                $diff = $validated['stock_quantity'] - $oldStock;
+            if ($newStock !== null && $newStock != $product->stock_quantity) {
+                $diff = $newStock - $product->stock_quantity;
                 StockService::recordAdjustment($product, $diff, 'Manual stock adjustment via update');
             }
             
-            return $product;
+            return $product->fresh(); // Return updated model
         });
     }
 

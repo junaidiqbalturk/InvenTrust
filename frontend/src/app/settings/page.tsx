@@ -139,7 +139,7 @@ export default function SettingsPage() {
                     {/* General Settings */}
                     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                         <Card className="border-none shadow-sm">
-                            <CardHeader border-b>
+                            <CardHeader className="border-b">
                                 <CardTitle className="flex items-center gap-2">
                                     <Building2 className="h-5 w-5 text-primary" />
                                     Company Profile

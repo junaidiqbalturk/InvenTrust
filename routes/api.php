@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\Api\V1\ReportingController;
@@ -30,12 +31,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Core ERP API
     Route::get('dashboard', [DashboardController::class , 'index']);
     
+    Route::apiResource('users', UserController::class);
     Route::apiResource('products', ProductController::class);
     Route::get('products/low-stock', [ProductController::class, 'lowStock']);
     
     Route::apiResource('parties', PartyController::class);
     Route::apiResource('invoices', InvoiceController::class);
+    Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
+    
     Route::apiResource('purchases', PurchaseController::class);
+    
+    Route::get('payments/{payment}/receipt', [PaymentController::class, 'downloadReceipt']);
     Route::apiResource('payments', PaymentController::class);
     Route::apiResource('warehouses', WarehouseController::class);
     

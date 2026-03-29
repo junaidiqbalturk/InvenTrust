@@ -67,6 +67,7 @@ class InvoiceController extends Controller
                     'unit_price' => $itemData['unit_price'],
                     'subtotal' => $itemData['quantity'] * $itemData['unit_price'],
                 ]);
+            }
 
             // Update Stock & Ledger (Double Entry)
             $totalCogs = 0;
@@ -150,6 +151,48 @@ class InvoiceController extends Controller
             // Delete associated ledger entries and payments (cascade handled if set)
             $invoice->delete();
             return response()->noContent();
+        });
+    }
+
+    public function pay(Request $request, Invoice $invoice)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . ($invoice->due_amount + 0.01), // Small tolerance for float errors
+            'date' => 'required|date',
+            'method' => 'required|in:cash,bank',
+            'reference' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($validated, $invoice) {
+            $payment = \App\Models\Payment::create([
+                'party_id' => $invoice->party_id,
+                'date' => $validated['date'],
+                'amount' => $validated['amount'],
+                'method' => $validated['method'],
+                'type' => 'incoming',
+                'reference' => $validated['reference'] ?? 'Payment for ' . $invoice->invoice_no,
+            ]);
+
+            $invoice->increment('paid_amount', $validated['amount']);
+            $invoice->decrement('due_amount', $validated['amount']);
+            
+            $invoice->refresh();
+            $invoice->status = ($invoice->due_amount <= 0) ? 'paid' : 'partial';
+            $invoice->save();
+
+            $methodAccount = $validated['method'] === 'cash' ? '1001' : '1002';
+            
+            AccountingService::postTransaction(
+                'Payment received for ' . $invoice->invoice_no,
+                $validated['date'],
+                [
+                    ['account_code' => $methodAccount, 'debit' => $validated['amount']],
+                    ['account_code' => '1200', 'credit' => $validated['amount'], 'party_id' => $invoice->party_id]
+                ],
+                $payment
+            );
+
+            return $invoice->load(['party', 'ledgerEntries']);
         });
     }
 }

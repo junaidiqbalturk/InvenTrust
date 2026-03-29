@@ -40,10 +40,9 @@ class AuthController extends Controller
                     ],
                 ]);
 
-                $adminRole = Role::where('name', 'Admin')->first();
-                if (!$adminRole) {
-                    $adminRole = Role::create(['name' => 'Admin', 'description' => 'Full system access']);
-                }
+                // Clone Permission Templates and get the workspace Admin role
+                $roleService = new \App\Services\RoleService();
+                $adminRole = $roleService->cloneTemplatesForCompany($company);
 
                 $user = User::create([
                     'name' => $request->name,

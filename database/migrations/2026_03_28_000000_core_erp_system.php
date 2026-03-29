@@ -114,8 +114,11 @@ return new class extends Migration
             $table->id();
             $table->string('company_name');
             $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('country')->nullable();
             $table->string('currency', 3)->default('USD');
             $table->string('industry')->nullable();
+            $table->string('logo_path')->nullable();
             $table->json('settings')->nullable();
             $table->timestamps();
         });
@@ -160,6 +163,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->enum('type', ['customer', 'supplier']);
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->text('address')->nullable();
+            $table->decimal('opening_balance', 15, 2)->default(0);
             $table->decimal('current_balance', 15, 2)->default(0);
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->timestamps();
@@ -169,6 +176,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->text('description')->nullable();
             $table->string('sku');
             $table->unique(['company_id', 'sku']);
             $table->string('category')->nullable();
@@ -203,6 +211,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->integer('quantity');
             $table->decimal('unit_price', 15, 2);
             $table->decimal('subtotal', 15, 2);
@@ -228,6 +237,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('purchase_id')->constrained('purchases')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->integer('quantity');
             $table->decimal('unit_price', 15, 2);
             $table->decimal('subtotal', 15, 2);
@@ -263,6 +273,7 @@ return new class extends Migration
             $table->foreignId('transaction_id')->nullable()->constrained('journal_transactions')->onDelete('cascade');
             $table->foreignId('account_id')->constrained('accounts')->onDelete('cascade');
             $table->foreignId('party_id')->nullable()->constrained('parties')->onDelete('cascade');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->date('date');
             $table->decimal('debit', 15, 2)->default(0);
             $table->decimal('credit', 15, 2)->default(0);
@@ -277,6 +288,7 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('party_id')->constrained('parties')->onDelete('cascade');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->date('date');
             $table->decimal('amount', 15, 2);
             $table->string('method')->default('cash');
@@ -312,6 +324,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->decimal('stock_quantity', 15, 2)->default(0);
             $table->timestamps();
         });
@@ -321,6 +334,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->onDelete('set null');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->enum('type', ['in', 'out', 'adjustment']);
             $table->decimal('quantity', 15, 2);
             $table->decimal('new_stock', 15, 2);

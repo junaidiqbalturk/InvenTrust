@@ -13,7 +13,9 @@ import {
     ArrowDownRight, 
     Package, 
     ShoppingCart,
-    Loader2
+    Loader2,
+    BarChart3,
+    LineChart
 } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -105,20 +107,25 @@ export default function DashboardPage() {
             key={i}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
             transition={{ delay: i * 0.1 }}
           >
-            <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
+            <Card className="overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 relative group">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className={`p-3 rounded-2xl ${kpi.bg}`}>
+                <div className="flex items-center justify-between relative z-10">
+                  <div className={`p-3 rounded-2xl ${kpi.bg} transition-transform group-hover:scale-110 duration-300`}>
                     <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
                   </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 relative z-10">
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">{kpi.title}</p>
                   <h3 className="text-3xl font-black mt-1">
                     {loadingData ? "..." : `$${kpi.value?.toLocaleString()}`}
                   </h3>
+                </div>
+                {/* Watermark Icon */}
+                <div className="absolute -bottom-2 -right-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500">
+                    <kpi.icon className={`h-24 w-24 ${kpi.color}`} strokeWidth={1} />
                 </div>
               </CardContent>
             </Card>
@@ -127,12 +134,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="border-none shadow-sm p-6">
-              <CardHeader className="px-0 pt-0">
+          <Card className="border-none shadow-sm p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+              <CardHeader className="px-0 pt-0 relative z-10">
                   <CardTitle className="text-xl font-bold">Sales Trends</CardTitle>
                   <CardDescription>Revenue movement over the last 6 months</CardDescription>
               </CardHeader>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[300px] w-full mt-4 relative z-10">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <AreaChart data={data?.charts.trends || []}>
                           <defs>
@@ -159,14 +166,18 @@ export default function DashboardPage() {
                       </AreaChart>
                   </ResponsiveContainer>
               </div>
+              {/* Watermark Icon */}
+              <div className="absolute -bottom-6 -right-6 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-500">
+                <LineChart className="h-48 w-48 text-primary" strokeWidth={1} />
+              </div>
           </Card>
 
-          <Card className="border-none shadow-sm p-6">
-              <CardHeader className="px-0 pt-0">
+          <Card className="border-none shadow-sm p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+              <CardHeader className="px-0 pt-0 relative z-10">
                   <CardTitle className="text-xl font-bold">Category Performance</CardTitle>
                   <CardDescription>Sales distribution by product category</CardDescription>
               </CardHeader>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[300px] w-full mt-4 relative z-10">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <BarChart data={data?.charts.categories || []}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -180,13 +191,17 @@ export default function DashboardPage() {
                       </BarChart>
                   </ResponsiveContainer>
               </div>
+              {/* Watermark Icon */}
+              <div className="absolute -bottom-6 -right-6 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-500">
+                <BarChart3 className="h-48 w-48 text-primary" strokeWidth={1} />
+              </div>
           </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="group hover:bg-primary transition-colors cursor-pointer border-none shadow-sm" onClick={() => window.location.href = '/sales'}>
-              <CardContent className="p-8 flex items-center gap-6">
-                  <div className="bg-primary/10 group-hover:bg-white/20 p-4 rounded-2xl transition-colors">
+          <Card className="group hover:bg-primary transition-all duration-500 cursor-pointer border-none shadow-sm hover:shadow-2xl relative overflow-hidden" onClick={() => window.location.href = '/sales'}>
+              <CardContent className="p-8 flex items-center gap-6 relative z-10">
+                  <div className="bg-primary/10 group-hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 group-hover:scale-110">
                       <ShoppingCart className="h-8 w-8 text-primary group-hover:text-white" />
                   </div>
                   <div>
@@ -194,11 +209,15 @@ export default function DashboardPage() {
                       <p className="text-muted-foreground group-hover:text-white/70">Create a new invoice for a customer</p>
                   </div>
               </CardContent>
+              {/* Watermark Icon */}
+              <div className="absolute -bottom-8 -right-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-500">
+                <ShoppingCart className="h-40 w-40 text-primary group-hover:text-white" strokeWidth={1} />
+              </div>
           </Card>
           
-          <Card className="group hover:bg-[#059669] transition-colors cursor-pointer border-none shadow-sm" onClick={() => window.location.href = '/inventory'}>
-              <CardContent className="p-8 flex items-center gap-6">
-                  <div className="bg-[#059669]/10 group-hover:bg-white/20 p-4 rounded-2xl transition-colors">
+          <Card className="group hover:bg-[#059669] transition-all duration-500 cursor-pointer border-none shadow-sm hover:shadow-2xl relative overflow-hidden" onClick={() => window.location.href = '/inventory'}>
+              <CardContent className="p-8 flex items-center gap-6 relative z-10">
+                  <div className="bg-[#059669]/10 group-hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 group-hover:scale-110">
                       <Package className="h-8 w-8 text-[#059669] group-hover:text-white" />
                   </div>
                   <div>
@@ -206,6 +225,10 @@ export default function DashboardPage() {
                       <p className="text-muted-foreground group-hover:text-white/70">View inventory levels and alerts</p>
                   </div>
               </CardContent>
+              {/* Watermark Icon */}
+              <div className="absolute -bottom-8 -right-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-500">
+                <Package className="h-40 w-40 text-[#059669] group-hover:text-white" strokeWidth={1} />
+              </div>
           </Card>
       </div>
     </div>

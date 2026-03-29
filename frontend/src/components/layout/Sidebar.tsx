@@ -49,12 +49,13 @@ export function Sidebar({ isCollapsed, onToggle, onHelpClick }: SidebarProps) {
 
     const navigation = [
         { name: "Dashboard", href: "/", icon: LayoutDashboard, id: "sidebar-dashboard" },
-        { name: "Inventory", href: "/inventory", icon: Warehouse, permission: "view_inventory" },
-        { name: "Sales & Invoicing", href: "/sales", icon: FileText, permission: "view_invoices" },
-        { name: "Purchases", href: "/purchases", icon: ShoppingCart, permission: "view_pos" },
-        { name: "Ledger", href: "/ledger", icon: BookOpen, permission: "view_clients" },
-        { name: "Payments", href: "/payments", icon: Receipt, permission: "view_vouchers" },
-        { name: "Reports", href: "/reports", icon: PieChart },
+        { name: "Inventory", href: "/inventory", icon: Warehouse, id: "sidebar-inventory", permission: "view_inventory" },
+        { name: "Contacts", href: "/contacts", icon: Users, id: "sidebar-contacts", permission: "view_clients" },
+        { name: "Sales & Invoicing", href: "/sales", icon: FileText, id: "sidebar-sales", permission: "view_invoices" },
+        { name: "Purchases", href: "/purchases", icon: ShoppingCart, id: "sidebar-purchases", permission: "view_pos" },
+        { name: "Ledger", href: "/ledger", icon: BookOpen, id: "sidebar-ledger", permission: "view_clients" },
+        { name: "Payments", href: "/payments", icon: Receipt, id: "sidebar-payments", permission: "view_vouchers" },
+        { name: "Reports", href: "/reports", icon: PieChart, id: "sidebar-reports" },
     ];
 
 
@@ -72,7 +73,7 @@ export function Sidebar({ isCollapsed, onToggle, onHelpClick }: SidebarProps) {
             "bg-[#1C2434] text-[#8A99AF] flex-shrink-0 flex flex-col h-screen sticky top-0 hidden md:flex z-50 transition-all duration-300 ease-in-out",
             isCollapsed ? "w-20" : "w-64 lg:w-72"
         )}>
-            <div className={cn("h-20 flex items-center py-4 relative", isCollapsed ? "justify-center px-0" : "px-6")}>
+            <div id="company-branding" className={cn("h-20 flex items-center py-4 relative", isCollapsed ? "justify-center px-0" : "px-6")}>
                 <Logo size="md" isCollapsed={isCollapsed} className="w-full justify-center" />
                 
                 {/* Toggle Button */}

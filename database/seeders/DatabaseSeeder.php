@@ -17,10 +17,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Create Admin Role & Permissions
-        $adminRole = Role::create([
+        // 1. Create GLOBAL Admin Role Template
+        $adminTemplate = Role::create([
             'name' => 'Admin',
             'description' => 'Full system access',
+            'company_id' => null, // Explicitly global
         ]);
 
         $permissions = [
@@ -28,12 +29,13 @@ class DatabaseSeeder extends Seeder
             'view_invoices', 'manage_sales',
             'view_pos', 'manage_purchases',
             'view_clients', 'manage_ledger',
-            'view_vouchers', 'manage_payments'
+            'view_vouchers', 'manage_payments',
+            'manage_roles', 'manage_users'
         ];
 
         foreach ($permissions as $p) {
             $permission = \App\Models\Permission::create(['name' => $p]);
-            $adminRole->permissions()->attach($permission->id);
+            $adminTemplate->permissions()->attach($permission->id);
         }
 
         // 2. Create Default Company
@@ -47,7 +49,10 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // 3. Create Default Warehouse
+        // 3. Clone Admin Role for the Demo Company using the RoleService
+        $roleService = new \App\Services\RoleService();
+        $companyAdminRole = $roleService->cloneTemplatesForCompany($company);
+        // 4. Create Default Warehouse
         $warehouse = Warehouse::create([
             'name' => 'Main Warehouse',
             'location' => 'Headquarters',
@@ -62,13 +67,13 @@ class DatabaseSeeder extends Seeder
             ])
         ]);
 
-        // 4. Create Default User
+        // 5. Create Default User with the COMPANY-SPECIFIC Role
         User::create([
             'name' => 'Admin User',
             'email' => 'admin@inventrust.com',
             'password' => Hash::make('password'),
             'company_id' => $company->id,
-            'role_id' => $adminRole->id,
+            'role_id' => $companyAdminRole->id,
             'has_completed_onboarding' => 1,
         ]);
 
@@ -78,6 +83,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Accounts Receivable', 'code' => '1200', 'type' => 'asset'],
             ['name' => 'Inventory', 'code' => '1300', 'type' => 'asset'],
             ['name' => 'Accounts Payable', 'code' => '2100', 'type' => 'liability'],
+            ['name' => 'Opening Balance Equity', 'code' => '3000', 'type' => 'equity'],
             ['name' => 'Sales Revenue', 'code' => '4000', 'type' => 'income'],
             ['name' => 'Cost of Goods Sold', 'code' => '5000', 'type' => 'expense'],
             ['name' => 'Operating Expenses', 'code' => '6000', 'type' => 'expense'],

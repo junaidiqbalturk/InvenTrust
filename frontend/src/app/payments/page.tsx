@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, DollarSign, ArrowUpRight, ArrowDownLeft, Calendar, Loader2 } from "lucide-react";
+import { Plus, Search, DollarSign, ArrowUpRight, ArrowDownLeft, Calendar, Loader2, Eye, Edit, Trash2, FileText, Download, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface Payment {
     id: number;
@@ -34,6 +36,12 @@ export default function PaymentsPage() {
     const [parties, setParties] = useState<Party[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    // View/Edit/Delete states
+    const [viewPayment, setViewPayment] = useState<Payment | null>(null);
+    const [editPayment, setEditPayment] = useState<Payment | null>(null);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Form states
     const [selectedParty, setSelectedParty] = useState("");
@@ -60,6 +68,53 @@ export default function PaymentsPage() {
             toast.error("Failed to load data");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDownloadReceipt = async (id: number) => {
+        try {
+            setIsDownloading(true);
+            const response = await api.get(`/payments/${id}/receipt`, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Receipt-PAY-${id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            toast.error("Failed to download receipt");
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    const handleUpdatePayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editPayment) return;
+        try {
+            await api.put(`/payments/${editPayment.id}`, {
+                date: editPayment.date,
+                method: editPayment.method,
+                reference: editPayment.reference,
+            });
+            toast.success("Payment updated successfully");
+            setEditPayment(null);
+            fetchData();
+        } catch (error) {
+            toast.error("Failed to update payment");
+        }
+    };
+
+    const handleDeletePayment = async () => {
+        if (!deleteId) return;
+        try {
+            await api.delete(`/payments/${deleteId}`);
+            toast.success("Payment deleted and balance reversed");
+            setDeleteId(null);
+            fetchData();
+        } catch (error) {
+            toast.error("Failed to delete payment");
         }
     };
 
@@ -122,18 +177,19 @@ export default function PaymentsPage() {
                                     <TableHead>Amount</TableHead>
                                     <TableHead>Method</TableHead>
                                     <TableHead>Reference</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {payments.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                        <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                                             No payment records found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     payments.map((p) => (
-                                        <TableRow key={p.id}>
+                                        <TableRow key={p.id} className="group hover:bg-muted/50 transition-colors">
                                             <TableCell>
                                                 <div className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                                     p.type === 'incoming' 
@@ -144,13 +200,30 @@ export default function PaymentsPage() {
                                                     {p.type}
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{new Date(p.date).toLocaleDateString()}</TableCell>
-                                            <TableCell className="font-medium">{p.party.name}</TableCell>
+                                            <TableCell className="font-medium">{new Date(p.date).toLocaleDateString()}</TableCell>
+                                            <TableCell className="font-bold">{p.party.name}</TableCell>
                                             <TableCell className={`font-black tabular-nums ${p.type === 'incoming' ? 'text-green-600' : 'text-rose-600'}`}>
-                                                ${p.amount.toFixed(2)}
+                                            ${Number(p.amount).toFixed(2)}
                                             </TableCell>
-                                            <TableCell className="capitalize">{p.method}</TableCell>
-                                            <TableCell className="text-muted-foreground">{p.reference || '-'}</TableCell>
+                                            <TableCell className="capitalize">
+                                                <Badge variant="outline" className="font-bold border-muted-foreground/20">
+                                                    {p.method}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground truncate max-w-[150px]">{p.reference || '-'}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap">
+                                                <div className="flex justify-end gap-1">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setViewPayment(p)}>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setEditPayment({...p})}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50" onClick={() => setDeleteId(p.id)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 )}
@@ -208,33 +281,151 @@ export default function PaymentsPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Payment Method</label>
-                                <Select value={method} onValueChange={(val) => val && setMethod(val)}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="cash">Cash</SelectItem>
-                                        <SelectItem value="bank">Bank Transfer</SelectItem>
-                                        <SelectItem value="check">Check</SelectItem>
-                                        <SelectItem value="card">Card</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                    <Select value={method} onValueChange={(val) => val && setMethod(val)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="bank">Bank Transfer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Reference / Notes</label>
-                                <Input placeholder="e.g. Check #1234, Bank confirmation" value={reference} onChange={e => setReference(e.target.value)} />
-                            </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-muted-foreground uppercase">Reference / Notes</Label>
+                                    <Input placeholder="e.g. Check #1234, Bank confirmation" value={reference} onChange={e => setReference(e.target.value)} />
+                                </div>
 
-                            <DialogFooter className="pt-4">
-                                <Button type="submit" className={`w-full h-12 text-lg ${paymentType === 'incoming' ? 'bg-green-600 hover:bg-green-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
-                                    Record {paymentType === 'incoming' ? 'Incoming Receipt' : 'Outgoing Payment'}
+                                <DialogFooter className="pt-4">
+                                    <Button type="submit" className={`w-full h-12 text-lg font-bold ${paymentType === 'incoming' ? 'bg-green-600 hover:bg-green-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
+                                        Record {paymentType === 'incoming' ? 'Incoming Receipt' : 'Outgoing Payment'}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </Tabs>
+                    </DialogContent>
+                </Dialog>
+
+                {/* View Payment Modal */}
+                <Dialog open={!!viewPayment} onOpenChange={() => setViewPayment(null)}>
+                    <DialogContent className="max-w-md rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-primary" />
+                                Payment Details
+                            </DialogTitle>
+                        </DialogHeader>
+                        {viewPayment && (
+                            <div className="space-y-6 pt-4">
+                                <div className="bg-muted/50 p-6 rounded-2xl border text-center space-y-2">
+                                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Transaction Amount</div>
+                                    <div className={`text-4xl font-black ${viewPayment.type === 'incoming' ? 'text-green-600' : 'text-rose-600'}`}>
+                                        ${Number(viewPayment.amount).toFixed(2)}
+                                    </div>
+                                    <Badge variant="outline" className="font-bold uppercase tracking-wider">
+                                        {viewPayment.method}
+                                    </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-y-4 px-2">
+                                    <div>
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Status</Label>
+                                        <div className="flex items-center gap-1.5 mt-0.5 text-sm font-bold text-green-600">
+                                            <CheckCircle2 className="h-4 w-4" /> Verified
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Date</Label>
+                                        <div className="mt-0.5 text-sm font-bold">{new Date(viewPayment.date).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{viewPayment.type === 'incoming' ? 'Received From' : 'Paid To'}</Label>
+                                        <div className="mt-0.5 text-sm font-bold">{viewPayment.party.name}</div>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Reference</Label>
+                                        <div className="mt-0.5 text-sm font-medium text-muted-foreground">{viewPayment.reference || 'No reference provided'}</div>
+                                    </div>
+                                </div>
+
+                                <Button 
+                                    className="w-full h-12 gap-2 font-bold" 
+                                    onClick={() => handleDownloadReceipt(viewPayment.id)}
+                                    disabled={isDownloading}
+                                >
+                                    {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                    Download Modern Receipt (PDF)
                                 </Button>
-                            </DialogFooter>
-                        </form>
-                    </Tabs>
-                </DialogContent>
-            </Dialog>
-        </div>
-    );
-}
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Edit Payment Modal */}
+                <Dialog open={!!editPayment} onOpenChange={() => setEditPayment(null)}>
+                    <DialogContent className="max-w-md rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                <Edit className="h-5 w-5 text-primary" />
+                                Edit Payment
+                            </DialogTitle>
+                        </DialogHeader>
+                        {editPayment && (
+                            <form onSubmit={handleUpdatePayment} className="space-y-4 pt-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase text-muted-foreground">Date</Label>
+                                    <Input type="date" value={editPayment.date} onChange={e => setEditPayment({...editPayment, date: e.target.value})} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase text-muted-foreground">Method</Label>
+                                    <Select value={editPayment.method} onValueChange={(val) => val && setEditPayment({...editPayment, method: val})}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="bank">Bank Transfer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase text-muted-foreground">Reference</Label>
+                                    <Input value={editPayment.reference || ''} onChange={e => setEditPayment({...editPayment, reference: e.target.value})} />
+                                </div>
+                                <DialogFooter className="pt-4">
+                                    <Button type="submit" className="w-full h-12 font-bold bg-primary hover:bg-primary/90">
+                                        Save Changes
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+                    <DialogContent className="max-w-sm rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-rose-600 flex items-center gap-2">
+                                <Trash2 className="h-5 w-5" />
+                                Reverse Payment?
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4 text-center space-y-3">
+                            <p className="text-muted-foreground text-sm leading-relaxed">
+                                This will permanently delete the payment record and <strong>reverse its impact</strong> on the ledger and party balance.
+                            </p>
+                            <div className="bg-rose-50 text-rose-700 p-3 rounded-xl text-xs font-bold border border-rose-100 italic">
+                                Note: This action cannot be undone.
+                            </div>
+                        </div>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button variant="ghost" className="flex-1 font-bold h-11" onClick={() => setDeleteId(null)}>Cancel</Button>
+                            <Button variant="destructive" className="flex-1 font-bold h-11 bg-rose-600 hover:bg-rose-700" onClick={handleDeletePayment}>Yes, Delete</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        );
+    }

@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Role extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\Multitenant;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'company_id'];
 
     public function users()
     {

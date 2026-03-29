@@ -84,7 +84,7 @@ export default function InvoicesPage() {
     const pendingInvoices = invoices.filter(inv => inv.status === 'pending');
 
     const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(amount));
     };
 
     const filteredInvoices = invoices.filter((invoice) => {

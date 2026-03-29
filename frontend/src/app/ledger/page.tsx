@@ -117,7 +117,7 @@ export default function LedgerPage() {
                             <CardContent className="pt-6">
                                 <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Current Balance</div>
                                 <div className={`text-3xl font-black mt-1 ${selectedParty?.current_balance && selectedParty.current_balance < 0 ? "text-rose-600" : "text-green-600"}`}>
-                                    ${selectedParty?.current_balance?.toFixed(2)}
+                                    ${Number(selectedParty?.current_balance || 0).toFixed(2)}
                                 </div>
                             </CardContent>
                         </Card>
@@ -162,13 +162,13 @@ export default function LedgerPage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-right font-medium text-rose-600 tabular-nums">
-                                                        {entry.type === 'debit' ? `$${entry.amount.toFixed(2)}` : '-'}
+                                                        {entry.type === 'debit' ? `$${Number(entry.amount).toFixed(2)}` : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-right font-medium text-green-600 tabular-nums">
-                                                        {entry.type === 'credit' ? `$${entry.amount.toFixed(2)}` : '-'}
+                                                        {entry.type === 'credit' ? `$${Number(entry.amount).toFixed(2)}` : '-'}
                                                     </TableCell>
                                                     <TableCell className={`text-right font-black tabular-nums ${entry.running_balance < 0 ? 'text-rose-700' : 'text-green-700'}`}>
-                                                        ${entry.running_balance.toFixed(2)}
+                                                        ${Number(entry.running_balance).toFixed(2)}
                                                     </TableCell>
                                                 </TableRow>
                                             ))

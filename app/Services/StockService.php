@@ -54,6 +54,7 @@ class StockService
 
         // Create the movement record
         $movement = StockMovement::create([
+            'company_id' => $product->company_id, // Ensure company_id is set
             'product_id' => $product->id,
             'warehouse_id' => $warehouseId,
             'type' => $type,
@@ -67,7 +68,39 @@ class StockService
         // Update product TOTAL stock balance (cache)
         $product->update(['stock_quantity' => $newStock]);
 
+        // Post to Accounting Ledger if it's a manual adjustment (no reference provided)
+        if (!$reference && $product->purchase_price > 0) {
+            $value = abs($quantity) * $product->purchase_price;
+            if ($value > 0) {
+                $ledgerDescription = $description ?: "Stock {$type} adjustment for {$product->name}";
+                $inventoryCode = AccountingService::getAccountCode('Inventory');
+                $equityCode = AccountingService::getAccountCode('Opening Balance Equity');
+                
+                $entries = [];
+                if ($quantity > 0) {
+                    // Stock In: Debit Inventory, Credit Equity
+                    $entries[] = ['account_code' => $inventoryCode, 'debit' => $value, 'credit' => 0];
+                    $entries[] = ['account_code' => $equityCode, 'debit' => 0, 'credit' => $value];
+                } else {
+                    // Stock Out: Credit Inventory, Debit Equity (or Loss account)
+                    $entries[] = ['account_code' => $inventoryCode, 'debit' => 0, 'credit' => $value];
+                    $entries[] = ['account_code' => $equityCode, 'debit' => $value, 'credit' => 0];
+                }
+                
+                AccountingService::postTransaction($ledgerDescription, now(), $entries, $movement);
+            }
+        }
+
         return $movement;
+    }
+
+    /**
+     * Helper to record an adjustment (Centralized point for manual edits)
+     */
+    public static function recordAdjustment(Product $product, float $quantity, string $description = 'Stock adjustment', ?int $warehouseId = null)
+    {
+        $type = $quantity >= 0 ? 'in' : 'out'; 
+        return self::recordMovement($product, $quantity, $type, null, $description, $warehouseId);
     }
 
     /**
