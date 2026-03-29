@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 
+error_log("Incoming Request: " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI']);
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...
