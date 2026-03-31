@@ -10,9 +10,21 @@ import {
     AlertTriangle, 
     CheckCircle2,
     Loader2,
+    History,
     RefreshCw,
-    Search
+    Search,
+    ShieldCheck,
+    Wand2,
+    X
 } from "lucide-react";
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogDescription,
+    DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -45,6 +57,12 @@ export default function InventoryValuation() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
 
+    // Auto-Fix State
+    const [isAutoFixOpen, setIsAutoFixOpen] = useState(false);
+    const [fixStep, setFixStep] = useState(0);
+    const [fixLogs, setFixLogs] = useState<string[]>([]);
+    const [isFixing, setIsFixing] = useState(false);
+
     useEffect(() => {
         fetchReport();
     }, []);
@@ -59,6 +77,44 @@ export default function InventoryValuation() {
             console.error(error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const runAutoFix = async () => {
+        setIsFixing(true);
+        setFixStep(1);
+        setFixLogs(["Initializing deep system scan..."]);
+        
+        try {
+            // Artificial delays for better UX/Real-time feel as requested
+            await new Promise(r => setTimeout(r, 800));
+            setFixStep(2);
+            setFixLogs(prev => [...prev, "Analyzing Physical Stock Valuation..."]);
+            
+            await new Promise(r => setTimeout(r, 1000));
+            setFixStep(3);
+            setFixLogs(prev => [...prev, "Auditing General Ledger Account 1300..."]);
+            
+            await new Promise(r => setTimeout(r, 1200));
+            setFixStep(4);
+            setFixLogs(prev => [...prev, "Calculating Valuation Bridge..."]);
+
+            const response = await api.post("/reports/inventory-valuation/auto-fix");
+            
+            if (response.data.status === 'success') {
+                setFixStep(5);
+                setFixLogs(prev => [...prev, ...response.data.steps]);
+                toast.success("Inventory reconciled successfully!");
+                fetchReport(); // Refresh main data
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error: any) {
+            setFixStep(-1);
+            setFixLogs(prev => [...prev, "ERROR: " + (error.message || "Failed to complete auto-fix")]);
+            toast.error("Auto-fix failed");
+        } finally {
+            setIsFixing(false);
         }
     };
 
@@ -207,19 +263,117 @@ export default function InventoryValuation() {
                 </Table>
             </Card>
 
-            {/* Advice Section */}
+            {/* Reconciliation Alert if needed */}
             {hasDiscrepancy && (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/50 rounded-lg flex items-start gap-4 animate-bounce">
+                <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-4 animate-in zoom-in-95 duration-500">
                     <AlertTriangle className="h-6 w-6 text-amber-600 mt-1 flex-shrink-0" />
                     <div>
-                        <p className="font-bold text-amber-700">Audit Needed</p>
-                        <p className="text-sm text-amber-600/80">
-                            Discrepancies usually occur due to manual stock adjustments that weren't mirrored in the accounting ledger, 
-                            or purchases that were recorded but not yet "Posted" to inventory. Run a ledger audit on Account 1300 to investigate.
+                        <p className="font-bold text-amber-700 uppercase tracking-tighter text-xs mb-1">Reconciliation Required</p>
+                        <p className="text-sm text-amber-600/80 mb-4">
+                            Physical valuation does not match GL Account 1300. Use the Auto-Fix tool to bridge the <strong>{formatCurrency(data.summary.discrepancy)}</strong> gap.
                         </p>
+                        <div className="flex flex-wrap gap-2">
+                            <Link href="/reports/ledger-audit?account=1300">
+                                <Button size="sm" variant="outline" className="h-8 border-amber-600 text-amber-700 hover:bg-amber-50 gap-2">
+                                    <History className="h-4 w-4" />
+                                    Run Ledger Audit
+                                </Button>
+                            </Link>
+                            <Button 
+                                size="sm" 
+                                onClick={() => { setIsAutoFixOpen(true); setFixStep(0); setFixLogs([]); }}
+                                className="h-8 bg-amber-600 text-white hover:bg-amber-700 gap-2 shadow-sm"
+                            >
+                                <Wand2 className="h-4 w-4" />
+                                Performance Auto-Fix
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
+
+            {/* Auto-Fix Modal */}
+            <Dialog open={isAutoFixOpen} onOpenChange={setIsAutoFixOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <ShieldCheck className="h-5 w-5 text-primary" />
+                            Inventory Reconciliation Wizard
+                        </DialogTitle>
+                        <DialogDescription>
+                            This tool will automatically identify and rectify discrepancies between your physical stock and financial ledger.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-6 min-h-[200px] flex flex-col gap-4">
+                        {fixStep === 0 ? (
+                            <div className="text-center space-y-4 py-4">
+                                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Wand2 className="h-8 w-8 text-primary animate-pulse" />
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    Ready to scan and bridge the <strong>{formatCurrency(data.summary.discrepancy)}</strong> gap.
+                                </p>
+                                <Button onClick={runAutoFix} className="w-full">Start Rectification</Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {/* Visual Steps */}
+                                <div className="flex justify-between relative px-2">
+                                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-muted -translate-y-1/2 z-0"></div>
+                                    {[1, 2, 3, 4, 5].map((s) => (
+                                        <div 
+                                            key={s} 
+                                            className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                                                fixStep >= s ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                                            }`}
+                                        >
+                                            {fixStep > s ? <CheckCircle2 className="h-3 w-3" /> : s}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Step-by-step Log */}
+                                <div className="bg-slate-950 rounded-lg p-4 font-mono text-[11px] h-48 overflow-y-auto custom-scrollbar">
+                                    {fixLogs.map((log, i) => (
+                                        <div key={i} className="flex gap-2 mb-1 animate-in fade-in slide-in-from-left-1">
+                                            <span className="text-emerald-500 text-[8px] mt-0.5">{">"}</span>
+                                            <span className="text-slate-300">{log}</span>
+                                        </div>
+                                    ))}
+                                    {isFixing && (
+                                        <div className="flex gap-2 items-center text-emerald-500 animate-pulse">
+                                            <span className="text-[8px] mt-0.5">{">"}</span>
+                                            <span>Processing...</span>
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                        </div>
+                                    )}
+                                    {fixStep === 5 && (
+                                        <div className="mt-4 p-2 bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/30 font-bold text-center">
+                                            SYSTEM RECONCILED SUCCESSFULLY
+                                        </div>
+                                    )}
+                                    {fixStep === -1 && (
+                                        <div className="mt-4 p-2 bg-rose-500/20 text-rose-400 rounded border border-rose-500/30 font-bold text-center">
+                                            FATAL ERROR: AUTO-FIX ABORTED
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        <Button 
+                            variant="secondary" 
+                            disabled={isFixing} 
+                            onClick={() => setIsAutoFixOpen(false)}
+                        >
+                            {fixStep === 5 ? "Done" : "Cancel"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

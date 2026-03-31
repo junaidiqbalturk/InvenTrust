@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Services\ReportingService;
 use App\Services\StockService;
+use App\Services\AutoFixService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -37,5 +38,18 @@ class ReportingController extends Controller
     {
         // Integration with StockService for valuation calculation
         return response()->json(StockService::getValuationReport());
+    }
+
+    public function autoFixInventory()
+    {
+        try {
+            $result = AutoFixService::fixInventoryDiscrepancy();
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to perform auto-fix: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
