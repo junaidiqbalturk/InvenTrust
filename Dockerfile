@@ -15,12 +15,19 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libicu-dev \
     libxslt-dev \
+    libwebp-dev \
+    libxpm-dev \
+    libsqlite3-dev \
+    libsodium-dev \
+    zlib1g-dev \
+    libssl-dev \
     fonts-liberation \
     libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions required for Laravel, PDF generation, and Internationalization
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+# Using a more explicit list to ensure all micro-requirements are met
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo_mysql \
     mbstring \
@@ -32,7 +39,14 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     intl \
     xml \
     xsl \
-    opcache
+    opcache \
+    dom \
+    simplexml \
+    xmlwriter \
+    xmlreader \
+    tokenizer \
+    fileinfo \
+    sodium
 
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
@@ -44,15 +58,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Environment variables for Composer
+# Using -1 for memory limit to prevent build-time OOM errors
 ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_MEMORY_LIMIT=-1
 
 # Copy project files
 COPY . .
 
 # Install PHP dependencies
 # We use --no-scripts first to avoid issues with artisan commands during build
-# Then we run the scripts after setting permissions
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+# Added --no-progress to reduce log noise and potential timeouts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --no-progress
 
 # Set permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
