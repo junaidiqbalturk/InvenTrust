@@ -29,7 +29,8 @@ import {
     TrendingUp,
     HelpCircle,
     Languages,
-    Check
+    Check,
+    Building2,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ export function Sidebar({ isCollapsed, onToggle, onHelpClick }: SidebarProps) {
         { name: "Ledger", href: "/ledger", icon: BookOpen, id: "sidebar-ledger", permission: "view_clients" },
         { name: "Payments", href: "/payments", icon: Receipt, id: "sidebar-payments", permission: "view_vouchers" },
         { name: "Reconciliation", href: "/accounting/reconcile", icon: Check, id: "sidebar-reconciliation", permission: "view_vouchers" },
+        { name: "Banks", href: "/accounting/banks", icon: Building2, id: "sidebar-banks", permission: "view_vouchers" },
         { name: "Reports", href: "/reports", icon: PieChart, id: "sidebar-reports" },
     ];
 

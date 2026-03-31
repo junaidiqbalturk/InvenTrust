@@ -17,6 +17,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\BankReconciliationController;
 use App\Http\Controllers\Api\V1\ReportingController;
 use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\BankController;
 use App\Http\Controllers\WarehouseController;
 
 
@@ -120,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::apiResource('accounts', AccountController::class);
+    Route::apiResource('banks', BankController::class);
     Route::get('accounts/{code}/ledger', [AccountController::class, 'ledger']);
 });
 
