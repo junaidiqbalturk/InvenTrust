@@ -72,6 +72,21 @@ class DashboardController extends Controller
             'charts' => [
                 'trends' => $salesTrends,
                 'categories' => $categoryPerformance,
+            ],
+            'smart_feed' => [
+                'total_reconciled' => \App\Models\BankTransaction::where('is_reconciled', true)->count(),
+                'recent_actions' => \App\Models\BankTransaction::where('is_reconciled', true)
+                    ->orderBy('updated_at', 'desc')
+                    ->limit(5)
+                    ->get()
+                    ->map(function ($t) {
+                        return [
+                            'id' => $t->id,
+                            'description' => $t->description,
+                            'amount' => $t->amount,
+                            'date' => $t->updated_at->diffForHumans(),
+                        ];
+                    })
             ]
         ]);
     }

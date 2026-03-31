@@ -59,4 +59,40 @@ class ReconciliationService
             ];
         })->sortByDesc('score')->values();
     }
+
+    /**
+     * Process automated reconciliation for a statement.
+     */
+    public static function processAutomation(\App\Models\BankStatement $statement)
+    {
+        $transactions = $statement->transactions()->where('is_reconciled', false)->get();
+        $automatedCount = 0;
+
+        foreach ($transactions as $transaction) {
+            $matches = self::findMatches($transaction);
+            
+            // Auto-reconcile ONLY 100% matches
+            $exactMatch = $matches->firstWhere('score', 80); // 50 (amount) + 30 (exact date)
+            
+            if ($exactMatch) {
+                $ledgerEntry = $exactMatch['ledger_entry'];
+                
+                \Illuminate\Support\Facades\DB::transaction(function () use ($transaction, $ledgerEntry) {
+                    $transaction->update([
+                        'is_reconciled' => true,
+                        'ledger_entry_id' => $ledgerEntry->id
+                    ]);
+
+                    $ledgerEntry->update([
+                        'is_reconciled' => true,
+                        'bank_transaction_id' => $transaction->id
+                    ]);
+                });
+                
+                $automatedCount++;
+            }
+        }
+
+        return $automatedCount;
+    }
 }

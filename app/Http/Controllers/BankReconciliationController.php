@@ -74,7 +74,12 @@ class BankReconciliationController extends Controller
             }
             fclose($handle);
 
-            return response()->json($statement->load('transactions'));
+            $autoCount = ReconciliationService::processAutomation($statement);
+
+            return response()->json([
+                'statement' => $statement->load('transactions'),
+                'auto_reconciled_count' => $autoCount
+            ]);
         });
     }
 

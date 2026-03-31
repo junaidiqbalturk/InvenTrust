@@ -15,10 +15,13 @@ import {
     ShoppingCart,
     Loader2,
     BarChart3,
-    LineChart
+    LineChart,
+    CheckCircle2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const LandingPage = dynamic(() => import("@/components/marketing/LandingPage"), {
   loading: () => (
@@ -48,6 +51,10 @@ interface DashboardData {
   charts: {
     trends: { month: string, total: number }[];
     categories: { category: string, value: number }[];
+  };
+  smart_feed?: {
+    total_reconciled: number;
+    recent_actions: any[];
   };
 }
 
@@ -198,38 +205,82 @@ export default function DashboardPage() {
           </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="group hover:bg-primary transition-all duration-500 cursor-pointer border-none shadow-sm hover:shadow-2xl relative overflow-hidden" onClick={() => window.location.href = '/sales'}>
-              <CardContent className="p-8 flex items-center gap-6 relative z-10">
-                  <div className="bg-primary/10 group-hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 group-hover:scale-110">
-                      <ShoppingCart className="h-8 w-8 text-primary group-hover:text-white" />
-                  </div>
+      {/* InvenIQ Smart Feed & Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Smart Feed */}
+          <Card className="lg:col-span-2 border-none shadow-sm overflow-hidden bg-white/40 backdrop-blur-xl border-t border-white/20">
+              <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                      <h3 className="text-xl font-bold group-hover:text-white">New Sale</h3>
-                      <p className="text-muted-foreground group-hover:text-white/70">Create a new invoice for a customer</p>
+                      <CardTitle className="text-xl font-bold flex items-center gap-2">
+                          <Activity className="h-5 w-5 text-primary animate-pulse" />
+                          InvenIQ Smart Feed
+                      </CardTitle>
+                      <CardDescription>Automated accounting activity and audit insights</CardDescription>
                   </div>
+                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                      {data?.smart_feed?.total_reconciled || 0} Auto-reconciled
+                  </Badge>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  {data?.smart_feed?.recent_actions && data.smart_feed.recent_actions.length > 0 ? (
+                      <div className="space-y-3">
+                          {data.smart_feed.recent_actions.map((action: any) => (
+                              <div key={action.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-zinc-100 hover:border-primary/30 transition-all hover:translate-x-1 duration-200">
+                                  <div className="flex items-center gap-3">
+                                      <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center">
+                                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                      </div>
+                                      <div>
+                                          <p className="text-sm font-bold text-zinc-900">{action.description}</p>
+                                          <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest">{action.date}</p>
+                                      </div>
+                                  </div>
+                                  <div className="text-right">
+                                      <p className="text-sm font-black text-emerald-600">
+                                          +{Math.abs(action.amount).toLocaleString()}
+                                      </p>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  ) : (
+                      <div className="py-10 text-center space-y-2 opacity-50 grayscale">
+                          <Activity className="h-10 w-10 mx-auto text-zinc-300" />
+                          <p className="text-sm font-medium">No recent automated activity</p>
+                      </div>
+                  )}
+                  <Button variant="ghost" className="w-full text-xs font-bold text-primary hover:bg-primary/5 mt-2" onClick={() => window.location.href = '/accounting/reconcile'}>
+                      View Detailed Log <ArrowUpRight className="h-3 w-3 ml-1" />
+                  </Button>
               </CardContent>
-              {/* Watermark Icon */}
-              <div className="absolute -bottom-8 -right-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-500">
-                <ShoppingCart className="h-40 w-40 text-primary group-hover:text-white" strokeWidth={1} />
-              </div>
           </Card>
-          
-          <Card className="group hover:bg-[#059669] transition-all duration-500 cursor-pointer border-none shadow-sm hover:shadow-2xl relative overflow-hidden" onClick={() => window.location.href = '/inventory'}>
-              <CardContent className="p-8 flex items-center gap-6 relative z-10">
-                  <div className="bg-[#059669]/10 group-hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 group-hover:scale-110">
-                      <Package className="h-8 w-8 text-[#059669] group-hover:text-white" />
-                  </div>
-                  <div>
-                      <h3 className="text-xl font-bold group-hover:text-white">Check Stock</h3>
-                      <p className="text-muted-foreground group-hover:text-white/70">View inventory levels and alerts</p>
-                  </div>
-              </CardContent>
-              {/* Watermark Icon */}
-              <div className="absolute -bottom-8 -right-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-500">
-                <Package className="h-40 w-40 text-[#059669] group-hover:text-white" strokeWidth={1} />
-              </div>
-          </Card>
+
+          {/* Core Actions Map */}
+          <div className="space-y-6">
+              <Card className="group hover:bg-primary transition-all duration-500 cursor-pointer border-none shadow-sm hover:shadow-2xl relative overflow-hidden" onClick={() => window.location.href = '/sales'}>
+                  <CardContent className="p-8 flex items-center gap-6 relative z-10">
+                      <div className="bg-primary/10 group-hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 group-hover:scale-110">
+                          <ShoppingCart className="h-8 w-8 text-primary group-hover:text-white" />
+                      </div>
+                      <div>
+                          <h3 className="text-xl font-bold group-hover:text-white">New Sale</h3>
+                          <p className="text-muted-foreground group-hover:text-white/70">Create a new invoice</p>
+                      </div>
+                  </CardContent>
+              </Card>
+              
+              <Card className="group hover:bg-[#059669] transition-all duration-500 cursor-pointer border-none shadow-sm hover:shadow-2xl relative overflow-hidden" onClick={() => window.location.href = '/inventory'}>
+                  <CardContent className="p-8 flex items-center gap-6 relative z-10">
+                      <div className="bg-[#059669]/10 group-hover:bg-white/20 p-4 rounded-2xl transition-all duration-300 group-hover:scale-110">
+                          <Package className="h-8 w-8 text-[#059669] group-hover:text-white" />
+                      </div>
+                      <div>
+                          <h3 className="text-xl font-bold group-hover:text-white">Check Stock</h3>
+                          <p className="text-muted-foreground group-hover:text-white/70">Inventory levels</p>
+                      </div>
+                  </CardContent>
+              </Card>
+          </div>
       </div>
     </div>
   );
