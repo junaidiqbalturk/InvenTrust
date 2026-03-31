@@ -22,6 +22,9 @@ interface FormData {
     country: string;
     currency: string;
     industry: string;
+    bank_name: string;
+    account_number: string;
+    coa_type: 'standard' | 'minimal';
 }
 
 type InvenIQState = 'idle' | 'listening' | 'thinking' | 'responding';
@@ -44,7 +47,10 @@ const InvenIQBot = ({ onComplete, onSwitchToManual }: InvenIQBotProps) => {
         company_name: '',
         country: '',
         currency: '',
-        industry: ''
+        industry: '',
+        bank_name: '',
+        account_number: '',
+        coa_type: 'standard'
     });
     const [isCreating, setIsCreating] = useState(false);
     const hasInitialized = useRef(false);
@@ -154,9 +160,21 @@ const InvenIQBot = ({ onComplete, onSwitchToManual }: InvenIQBotProps) => {
                 ]);
                 break;
             case 8:
-                await addInvenIQMessage("Let’s confirm your workspace details:", undefined, 'summary');
+                await addInvenIQMessage("To get your books ready, what's your primary business bank name? (e.g. Chase, HBL, Emirates NBD)");
                 break;
             case 9:
+                await addInvenIQMessage(`Got it, ${data.bank_name}. What's the last 4 digits or the account number? (This is for your internal reference only)`);
+                break;
+            case 10:
+                await addInvenIQMessage("How should I configure your Chart of Accounts?", [
+                    { label: "Standard (Recommended) 📚", value: "standard" },
+                    { label: "Minimal (Start Fresh) ⚡", value: "minimal" }
+                ]);
+                break;
+            case 11:
+                await addInvenIQMessage("Perfect! Let’s confirm your workspace details:", undefined, 'summary');
+                break;
+            case 12:
                 setIsCreating(true);
                 await addInvenIQMessage("Awesome! Orchestrating your inventory environment...", undefined, 'loader');
                 setTimeout(async () => {
@@ -220,14 +238,29 @@ const InvenIQBot = ({ onComplete, onSwitchToManual }: InvenIQBotProps) => {
                 triggerStep(8, { ...formData, industry: text });
                 break;
             case 8:
+                setFormData((prev: FormData) => ({ ...prev, bank_name: text }));
+                setStep(9);
+                triggerStep(9, { ...formData, bank_name: text });
+                break;
+            case 9:
+                setFormData((prev: FormData) => ({ ...prev, account_number: text }));
+                setStep(10);
+                triggerStep(10, { ...formData, account_number: text });
+                break;
+            case 10:
+                setFormData((prev: FormData) => ({ ...prev, coa_type: text as 'standard' | 'minimal' }));
+                setStep(11);
+                triggerStep(11, { ...formData, coa_type: text as 'standard' | 'minimal' });
+                break;
+            case 11:
                 if (text === 'edit') {
                     setStep(1);
                     setMessages(prev => prev.filter(m => m.id === 'resume'));
                     addUserMessage("I want to edit some details.");
                     triggerStep(1);
                 } else {
-                    setStep(9);
-                    triggerStep(9);
+                    setStep(12);
+                    triggerStep(12);
                 }
                 break;
         }
@@ -327,6 +360,13 @@ const InvenIQBot = ({ onComplete, onSwitchToManual }: InvenIQBotProps) => {
                                                     <span className="text-slate-400">Industry:</span>
                                                     <span className="text-white font-black">{formData.industry}</span>
                                                 </div>
+                                                <div className="flex items-center gap-3 text-xs border-t border-white/5 pt-2">
+                                                    <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                                    </div>
+                                                    <span className="text-slate-400">Bank:</span>
+                                                    <span className="text-white font-black">{formData.bank_name || 'Skip'}</span>
+                                                </div>
                                             </div>
                                         )}
 
@@ -401,7 +441,7 @@ const InvenIQBot = ({ onComplete, onSwitchToManual }: InvenIQBotProps) => {
             </div>
 
             {/* Input Area */}
-            {step > 0 && step < 8 && !isCreating && (
+            {step > 0 && step < 11 && !isCreating && (
                 <div className="p-8 bg-white/[0.01] border-t border-white/5 relative z-10 transition-all">
                     {step === 3 && (
                         <div className="mb-4 space-y-2 px-1">
@@ -457,14 +497,14 @@ const InvenIQBot = ({ onComplete, onSwitchToManual }: InvenIQBotProps) => {
                     
                     {/* Progress Dots */}
                     <div className="mt-6 flex items-center justify-between px-2">
-                        <div className="flex gap-2">
-                            {[1,2,3,4,5,7,8].map(i => (
-                                <div key={i} className={`h-1.5 w-6 rounded-full transition-all duration-500 ${i <= step ? 'bg-primary' : 'bg-white/10'}`} />
+                        <div className="flex gap-1.5">
+                            {[1,2,3,4,5,7,8,9,10,11].map(i => (
+                                <div key={i} className={`h-1 w-4 rounded-full transition-all duration-500 ${i <= step ? 'bg-primary' : 'bg-white/10'}`} />
                             ))}
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
                             <span className="h-1 w-1 rounded-full bg-primary" />
-                            Progress {Math.round((step / 8) * 100)}%
+                            Progress {Math.round((step / 11) * 100)}%
                         </span>
                     </div>
                 </div>

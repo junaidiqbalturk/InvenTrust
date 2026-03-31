@@ -23,6 +23,13 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'industry' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
+            // Enhanced Onboarding Fields
+            'bank_name' => 'nullable|string|max:255',
+            'account_number' => 'nullable|string|max:255',
+            'initial_balance' => 'nullable|numeric',
+            'coa_type' => 'nullable|string|in:standard,minimal',
+            'tax_id' => 'nullable|string|max:255',
+            'fiscal_year_start' => 'nullable|string|max:20',
         ]);
 
         try {
@@ -35,8 +42,11 @@ class AuthController extends Controller
                     'country' => $request->country,
                     'settings' => [
                         'enable_multi_warehouse' => true,
-                        'tax_enabled' => false,
+                        'tax_enabled' => $request->tax_id ? true : false,
+                        'tax_id' => $request->tax_id,
+                        'fiscal_year_start' => $request->fiscal_year_start ?: 'January',
                         'logo_url' => null,
+                        'bank_info_provided' => $request->bank_name ? true : false,
                     ],
                 ]);
 
@@ -53,8 +63,14 @@ class AuthController extends Controller
                     'has_completed_onboarding' => 0,
                 ]);
 
+                // Initialize Financials & COA via Enhanced Seeder
                 $demoService = new \App\Services\DemoDataService();
-                $demoService->seed($company);
+                $demoService->seed($company, [
+                    'bank_name' => $request->bank_name,
+                    'account_number' => $request->account_number,
+                    'initial_balance' => $request->initial_balance,
+                    'coa_type' => $request->coa_type ?: 'standard',
+                ]);
 
                 $user->load(['role.permissions', 'company']);
 

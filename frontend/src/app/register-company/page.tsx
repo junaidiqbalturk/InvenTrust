@@ -26,11 +26,17 @@ const formSchema = z.object({
     country: z.string().min(2, "Country is required"),
     currency: z.string().min(3).max(3),
     industry: z.string().min(1, "Please select an industry"),
+    // Financial Info
+    bank_name: z.string().optional(),
+    account_number: z.string().optional(),
+    initial_balance: z.string().optional(),
+    tax_id: z.string().optional(),
+    coa_type: z.enum(["standard", "minimal"]).default("standard"),
 });
 
 import InvenIQBot from "@/components/marketing/InvenIQBot";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 type OnboardingMode = 'form' | 'inveniq' | null;
 
 export default function RegisterCompanyPage() {
@@ -51,7 +57,12 @@ export default function RegisterCompanyPage() {
             company_name: "", 
             country: "United States", 
             currency: "USD",
-            industry: "Both"
+            industry: "Both",
+            bank_name: "",
+            account_number: "",
+            initial_balance: "0",
+            tax_id: "",
+            coa_type: "standard"
         },
     });
 
@@ -87,7 +98,7 @@ export default function RegisterCompanyPage() {
 
     // Success animation progress
     useEffect(() => {
-        if (step === 3) {
+        if (step === 4) {
             const timer = setInterval(() => {
                 setSetupProgress(prev => {
                     if (prev >= 100) {
@@ -111,7 +122,7 @@ export default function RegisterCompanyPage() {
             });
             
             // Move to success animation step
-            setStep(3);
+            setStep(4);
             
             // Wait for animation to finish before login
             setTimeout(() => {
@@ -126,13 +137,17 @@ export default function RegisterCompanyPage() {
     }
 
     const nextStep = async () => {
-        const fields = step === 1 ? ["name", "email", "password"] : ["company_name", "country", "currency", "industry"];
+        let fields: any[] = [];
+        if (step === 1) fields = ["name", "email", "password"];
+        if (step === 2) fields = ["company_name", "country", "currency", "industry"];
+        if (step === 3) fields = ["bank_name", "account_number", "tax_id"];
+
         const isValid = await form.trigger(fields as any);
         if (isValid) setStep(prev => (prev + 1) as Step);
     };
 
     const handleInvenIQComplete = (data: any) => {
-        setStep(3);
+        setStep(4);
         setTimeout(() => {
             login(data.token, data.user);
         }, 3500);
@@ -196,7 +211,7 @@ export default function RegisterCompanyPage() {
                 {/* Right Side: Onboarding Flow */}
                 <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative z-10 overflow-y-auto">
                     <AnimatePresence mode="wait">
-                        {!onboardingMode && step < 3 && (
+                        {!onboardingMode && step < 4 && (
                             <motion.div 
                                 key="choice-screen"
                                 initial={{ opacity: 0, scale: 0.9 }}
@@ -250,7 +265,7 @@ export default function RegisterCompanyPage() {
                             </motion.div>
                         )}
 
-                        {onboardingMode === 'inveniq' && step < 3 && (
+                        {onboardingMode === 'inveniq' && step < 4 && (
                             <motion.div 
                                 key="inveniq-bot"
                                 initial={{ opacity: 0, x: 20 }}
@@ -265,7 +280,7 @@ export default function RegisterCompanyPage() {
                             </motion.div>
                         )}
 
-                        {onboardingMode === 'form' && step < 3 && (
+                        {onboardingMode === 'form' && step < 4 && (
                             <motion.div
                                 key="standard-form"
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -282,11 +297,11 @@ export default function RegisterCompanyPage() {
                                 </Button>
 
                                 <div className="flex justify-between mb-10 px-4">
-                                    {[1, 2].map((i) => (
+                                    {[1, 2, 3].map((i) => (
                                         <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => i < step && setStep(i as Step)}>
-                                            <div className={`h-1.5 w-16 lg:w-32 rounded-full transition-all duration-500 ${step >= i ? 'bg-primary' : 'bg-white/10'}`} />
-                                            <span className={`text-[10px] uppercase tracking-widest font-bold ${step === i ? 'text-primary' : 'text-slate-500'}`}>
-                                                {i === 1 ? t('personalInfo') : t('workspaceInfo')}
+                                            <div className={`h-1.5 w-10 lg:w-24 rounded-full transition-all duration-500 ${step >= i ? 'bg-primary' : 'bg-white/10'}`} />
+                                            <span className={`text-[9px] uppercase tracking-widest font-bold ${step === i ? 'text-primary' : 'text-slate-500'}`}>
+                                                {i === 1 ? 'Admin' : i === 2 ? 'Workspace' : 'Financials'}
                                             </span>
                                         </div>
                                     ))}
@@ -483,6 +498,103 @@ export default function RegisterCompanyPage() {
 
                                                         <div className="pt-4 flex flex-col gap-4">
                                                             <Button 
+                                                                type="button" 
+                                                                onClick={nextStep}
+                                                                className="w-full h-14 bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 rounded-2xl font-black text-lg group"
+                                                            >
+                                                                Continue
+                                                                <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                                            </Button>
+                                                            <Button type="button" variant="ghost" onClick={() => setStep(1)} className="text-slate-500 hover:text-white hover:bg-white/5 font-bold">
+                                                                Wait, go back
+                                                            </Button>
+                                                        </div>
+                                                    </form>
+                                                </Form>
+                                            </motion.div>
+                                        )}
+
+                                        {step === 3 && (
+                                            <motion.div
+                                                key="form-step3"
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -20 }}
+                                                className="space-y-8"
+                                            >
+                                                <div className="text-center">
+                                                    <h2 className="text-3xl font-black text-white">Financial Matrix</h2>
+                                                    <p className="text-slate-400 mt-2">Initialize your core ledger & bank</p>
+                                                </div>
+
+                                                <Form {...form}>
+                                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="bank_name"
+                                                            render={({ field }) => (
+                                                                <FormItem className="space-y-2">
+                                                                    <FormLabel className="text-slate-400 text-xs ml-1 uppercase tracking-widest font-bold">Primary Bank Name</FormLabel>
+                                                                    <FormControl>
+                                                                        <div className="relative group">
+                                                                            <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                                                            <Input className="h-12 pl-11 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-primary/20 transition-all font-medium" placeholder="E.g. Chase Bank" {...field} />
+                                                                        </div>
+                                                                    </FormControl>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <FormField
+                                                                control={form.control}
+                                                                name="account_number"
+                                                                render={({ field }) => (
+                                                                    <FormItem className="space-y-2">
+                                                                        <FormLabel className="text-slate-400 text-xs ml-1 uppercase tracking-widest font-bold">Account # (Last 4)</FormLabel>
+                                                                        <FormControl>
+                                                                            <Input className="h-12 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="6789" {...field} />
+                                                                        </FormControl>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                            <FormField
+                                                                control={form.control}
+                                                                name="tax_id"
+                                                                render={({ field }) => (
+                                                                    <FormItem className="space-y-2">
+                                                                        <FormLabel className="text-slate-400 text-xs ml-1 uppercase tracking-widest font-bold">Tax ID (Optional)</FormLabel>
+                                                                        <FormControl>
+                                                                            <Input className="h-12 bg-white/5 border-white/10 text-white rounded-2xl" placeholder="VAT-123" {...field} />
+                                                                        </FormControl>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        </div>
+
+                                                        <FormField
+                                                            control={form.control}
+                                                            name="coa_type"
+                                                            render={({ field }) => (
+                                                                <FormItem className="space-y-2">
+                                                                    <FormLabel className="text-slate-400 text-xs ml-1 uppercase tracking-widest font-bold">Chart of Accounts Mode</FormLabel>
+                                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                                        <FormControl>
+                                                                            <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white rounded-2xl">
+                                                                                <SelectValue placeholder="Select mode" />
+                                                                            </SelectTrigger>
+                                                                        </FormControl>
+                                                                        <SelectContent className="bg-[#020617] border-white/10 text-white">
+                                                                            <SelectItem value="standard">Standard (Industry Ready)</SelectItem>
+                                                                            <SelectItem value="minimal">Minimal (Start From Scratch)</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </FormItem>
+                                                            )}
+                                                        />
+
+                                                        <div className="pt-4 flex flex-col gap-4">
+                                                            <Button 
                                                                 type="submit" 
                                                                 disabled={isLoading}
                                                                 className="w-full h-14 bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 rounded-2xl font-black text-lg group"
@@ -491,12 +603,12 @@ export default function RegisterCompanyPage() {
                                                                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-white/80" />
                                                                 ) : (
                                                                     <span className="flex items-center justify-center">
-                                                                        Create My Workspace
-                                                                        <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                                                        Complete Setup
+                                                                        <Sparkles className="ml-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                                                                     </span>
                                                                 )}
                                                             </Button>
-                                                            <Button type="button" variant="ghost" onClick={() => setStep(1)} className="text-slate-500 hover:text-white hover:bg-white/5 font-bold">
+                                                            <Button type="button" variant="ghost" onClick={() => setStep(2)} className="text-slate-500 hover:text-white hover:bg-white/5 font-bold">
                                                                 Wait, go back
                                                             </Button>
                                                         </div>
@@ -509,7 +621,7 @@ export default function RegisterCompanyPage() {
                             </motion.div>
                         )}
 
-                        {step === 3 && (
+                        {step === 4 && (
                             <motion.div
                                 key="success-step"
                                 initial={{ opacity: 0, scale: 0.9 }}
