@@ -112,7 +112,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User profile retrieved',
-            'data' => Auth::guard('api')->user()
+            'data' => Auth::guard('api')->user()->load(['role.permissions', 'company'])
         ]);
     }
 
@@ -132,7 +132,7 @@ class AuthController extends Controller
                 'access_token' => $token,
                 'token_type' => 'bearer',
                 'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
-                'user' => Auth::guard('api')->user()
+                'user' => Auth::guard('api')->user()->load(['role.permissions', 'company'])
             ]
         ]);
     }

@@ -33,17 +33,52 @@ Route::middleware('auth:sanctum')->group(function () {
     // Core ERP API
     Route::get('dashboard', [DashboardController::class , 'index']);
     
-    Route::apiResource('users', UserController::class);
-    Route::apiResource('products', ProductController::class);
-    Route::get('products/low-stock', [ProductController::class, 'lowStock']);
+    Route::middleware('permission:manage_users')->group(function () {
+        Route::apiResource('users', UserController::class);
+    });
+
+    Route::middleware('permission:view_inventory')->group(function () {
+        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products/low-stock', [ProductController::class, 'lowStock']);
+        Route::get('products/{product}', [ProductController::class, 'show']);
+    });
+
+    Route::middleware('permission:manage_inventory')->group(function () {
+        Route::post('products', [ProductController::class, 'store']);
+        Route::put('products/{product}', [ProductController::class, 'update']);
+        Route::delete('products/{product}', [ProductController::class, 'destroy']);
+    });
     
     Route::apiResource('parties', PartyController::class);
-    Route::apiResource('invoices', InvoiceController::class);
-    Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
+
+    Route::middleware('permission:view_sales')->group(function () {
+        Route::get('invoices', [InvoiceController::class, 'index']);
+        Route::get('invoices/{invoice}', [InvoiceController::class, 'show']);
+    });
+
+    Route::middleware('permission:create_sales')->group(function () {
+        Route::post('invoices', [InvoiceController::class, 'store']);
+    });
+
+    Route::middleware('permission:pay_invoice')->group(function () {
+        Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
+    });
     
-    Route::apiResource('purchases', PurchaseController::class);
+    Route::middleware('permission:view_purchases')->group(function () {
+        Route::get('purchases', [PurchaseController::class, 'index']);
+        Route::get('purchases/{purchase}', [PurchaseController::class, 'show']);
+    });
+
+    Route::middleware('permission:create_purchases')->group(function () {
+        Route::post('purchases', [PurchaseController::class, 'store']);
+    });
+
+    Route::middleware('permission:pay_purchase')->group(function () {
+        Route::post('purchases/{purchase}/pay', [PurchaseController::class, 'pay']);
+    });
+
     // Bank Reconciliation
-    Route::prefix('reconciliation')->group(function () {
+    Route::middleware('permission:reconcile_bank')->prefix('reconciliation')->group(function () {
         Route::get('/', [BankReconciliationController::class, 'index']);
         Route::post('/upload', [BankReconciliationController::class, 'upload']);
         Route::get('/statements/{statement}', [BankReconciliationController::class, 'show']);
@@ -58,12 +93,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('ledger/{party}', [LedgerController::class, 'show']);
     Route::get('ledger', [LedgerController::class, 'index']);
 
-    // Admin & Settings (Simplified)
-    Route::get('roles/permissions', [RoleController::class, 'permissions']);
-    Route::apiResource('roles', RoleController::class);
+    // Admin & Settings
+    Route::middleware('permission:manage_roles')->group(function () {
+        Route::get('roles/permissions', [RoleController::class, 'permissions']);
+        Route::apiResource('roles', RoleController::class);
+    });
     
-    Route::get('/company', [CompanyController::class, 'show']);
-    Route::put('/company', [CompanyController::class, 'update']);
+    Route::middleware('permission:manage_company')->group(function () {
+        Route::get('/company', [CompanyController::class, 'show']);
+        Route::put('/company', [CompanyController::class, 'update']);
+    });
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index']);
@@ -72,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     // Reporting & Reconciliation
-    Route::prefix('reports')->group(function () {
+    Route::middleware('permission:view_reports')->prefix('reports')->group(function () {
         Route::get('trial-balance', [ReportingController::class, 'trialBalance']);
         Route::get('profit-loss', [ReportingController::class, 'profitAndLoss']);
         Route::get('balance-sheet', [ReportingController::class, 'balanceSheet']);
