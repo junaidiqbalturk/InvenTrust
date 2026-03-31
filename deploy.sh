@@ -6,8 +6,12 @@ set -e
 echo "🚀 Starting InvenTrust Deployment Script..."
 
 # Optimize Laravel for production
-# These commands cache the configuration and routes for faster performance
+# These commands cache the configuration, routes, and views for faster performance
 echo "📦 Optimizing Laravel..."
+
+# Generate or discover necessary packages
+php artisan package:discover --ansi
+
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
