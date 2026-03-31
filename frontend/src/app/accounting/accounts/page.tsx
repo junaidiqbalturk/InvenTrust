@@ -132,8 +132,8 @@ export default function ChartOfAccountsPage() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className={cn(
-                        "group flex items-center gap-3 p-3 rounded-2xl hover:bg-white/[0.04] transition-all border border-transparent hover:border-white/5 mb-1",
-                        level === 0 ? "bg-white/[0.02]" : ""
+                        "group flex items-center gap-3 p-3 rounded-2xl hover:bg-accent/50 transition-all border border-transparent hover:border-border/50 mb-1",
+                        level === 0 ? "bg-accent/10" : ""
                     )}
                 >
                     <div 
@@ -153,9 +153,9 @@ export default function ChartOfAccountsPage() {
 
                     <div className="flex-1">
                         <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-200">{account.name}</span>
+                            <span className="font-bold text-slate-900 dark:text-slate-200">{account.name}</span>
                             {account.is_system && (
-                                <Badge variant="outline" className="text-[8px] h-4 bg-primary/5 text-primary border-primary/20 flex gap-1 items-center font-black">
+                                <Badge variant="outline" className="text-[8px] h-4 bg-primary/10 text-primary border-primary/20 flex gap-1 items-center font-black">
                                     <ShieldCheck className="h-2 w-2" /> CORE
                                 </Badge>
                             )}
@@ -171,7 +171,7 @@ export default function ChartOfAccountsPage() {
                             )}
                         </div>
                         {account.description && (
-                            <p className="text-[10px] text-slate-500 line-clamp-1">{account.description}</p>
+                            <p className="text-[10px] text-muted-foreground line-clamp-1">{account.description}</p>
                         )}
                     </div>
 
@@ -208,7 +208,7 @@ export default function ChartOfAccountsPage() {
                 </motion.div>
 
                 {isExpanded && hasChildren && (
-                    <div className="ml-6 border-l border-white/5 pl-4 pb-2 mt-1">
+                    <div className="ml-6 border-l border-border/20 pl-4 pb-2 mt-1">
                         {children.map(child => (
                             <AccountTreeItem key={child.id} account={child} level={level + 1} />
                         ))}
@@ -223,15 +223,15 @@ export default function ChartOfAccountsPage() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-4">
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4">
                         <FolderTree className="h-10 w-10 text-primary" />
                         Chart of Accounts
                     </h1>
-                    <p className="text-slate-500 mt-2 font-medium">Configure your financial foundation and account hierarchy.</p>
+                    <p className="text-muted-foreground mt-2 font-medium">Configure your financial foundation and account hierarchy.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="bg-white/5 p-1 rounded-xl flex gap-1 border border-white/10">
+                    <div className="bg-muted p-1 rounded-xl flex gap-1 border border-border">
                         <Button 
                             variant={viewMode === 'tree' ? 'secondary' : 'ghost'} 
                             size="sm" 
@@ -251,12 +251,14 @@ export default function ChartOfAccountsPage() {
                     </div>
                     
                     <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="h-11 px-6 bg-primary hover:bg-primary/90 text-white font-black rounded-xl shadow-lg shadow-primary/20 group">
-                                <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform" />
-                                Add Account
-                            </Button>
-                        </DialogTrigger>
+                        <DialogTrigger 
+                            render={
+                                <Button className="h-11 px-6 bg-primary hover:bg-primary/90 text-white font-black rounded-xl shadow-lg shadow-primary/20 group">
+                                    <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform" />
+                                    Add Account
+                                </Button>
+                            }
+                        />
                         <DialogContent className="bg-[#020617] border-white/10 text-white max-w-lg">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-black">New Ledger Account</DialogTitle>
@@ -277,7 +279,7 @@ export default function ChartOfAccountsPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest px-1">Type</label>
-                                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v as AccountType })}>
+                                            <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: (v as AccountType) ?? "expense" })}>
                                                 <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl">
                                                     <SelectValue />
                                                 </SelectTrigger>
@@ -292,7 +294,7 @@ export default function ChartOfAccountsPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest px-1">Parent (Optional)</label>
-                                            <Select value={formData.parent_id} onValueChange={v => setFormData({ ...formData, parent_id: v })}>
+                                            <Select value={formData.parent_id} onValueChange={v => setFormData({ ...formData, parent_id: v ?? "none" })}>
                                                 <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl">
                                                     <SelectValue />
                                                 </SelectTrigger>
@@ -363,33 +365,33 @@ export default function ChartOfAccountsPage() {
                     { label: "Income", range: "4000s", color: "text-emerald-400" },
                     { label: "Expenses", range: "5000s", color: "text-amber-400" },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl flex items-center justify-between">
+                    <div key={i} className="bg-card/50 backdrop-blur-sm border border-border/50 p-4 rounded-2xl flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">{stat.label}</p>
+                            <p className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter">{stat.label}</p>
                             <p className={cn("text-lg font-black", stat.color)}>{stat.range}</p>
                         </div>
-                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center">
-                            <LayoutGrid className="h-4 w-4 text-slate-500" />
+                        <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* Main Content */}
-            <Card className="bg-[#020617]/50 backdrop-blur-3xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden min-h-[600px]">
-                <CardHeader className="border-b border-white/5 bg-white/[0.01] p-8">
+            <Card className="bg-card dark:bg-slate-900/50 backdrop-blur-3xl border-border/50 rounded-[2.5rem] shadow-2xl overflow-hidden min-h-[600px]">
+                <CardHeader className="border-b border-border/5 bg-muted/30 p-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <CardTitle className="text-2xl font-black text-white tracking-tight">Financial Ledger</CardTitle>
-                            <CardDescription className="text-slate-500 font-medium mt-1">Hierarchical view of all ledger accounts.</CardDescription>
+                            <CardTitle className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Financial Ledger</CardTitle>
+                            <CardDescription className="text-muted-foreground font-medium mt-1">Hierarchical view of all ledger accounts.</CardDescription>
                         </div>
                         <div className="relative w-full md:w-72 group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <Input 
                                 placeholder="Search accounts..." 
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-white/5 border-white/10 h-11 rounded-xl focus:ring-primary/20 transition-all font-medium"
+                                className="pl-10 bg-muted/50 border-border h-11 rounded-xl focus:ring-primary/20 transition-all font-medium"
                             />
                         </div>
                     </div>
@@ -430,7 +432,7 @@ export default function ChartOfAccountsPage() {
                 </div>
                 <div className="space-y-2">
                     <h4 className="font-black text-primary uppercase text-xs tracking-widest">Accounting Tip</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                    <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                         Proper account categorization ensures accurate **Balance Sheets** and **Profit & Loss** reports. 
                         Use sub-accounts for detailed tracking (e.g. create "Travel" and "Utilities" under "Expenses").
                     </p>

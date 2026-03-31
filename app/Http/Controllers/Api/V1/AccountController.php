@@ -7,10 +7,11 @@ use App\Models\Account;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
+use App\Traits\AccountingHelper;
 
 class AccountController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, AccountingHelper;
 
     public function index()
     {
@@ -76,30 +77,7 @@ class AccountController extends Controller
         return $this->success(null, 'Account deleted successfully');
     }
 
-    /**
-     * Generate a code based on typical accounting ranges:
-     * Assets: 1000s, Liabilities: 2000s, Equity: 3000s, Income: 4000s, Expenses: 5000s
-     */
-    private function generateRecommendedCode($type)
-    {
-        $ranges = [
-            'asset' => 1000,
-            'liability' => 2000,
-            'equity' => 3000,
-            'income' => 4000,
-            'expense' => 5000,
-        ];
-
-        $base = $ranges[$type];
-        $maxCode = Account::where('type', $type)
-            ->where('code', 'REGEXP', '^[0-9]+$')
-            ->whereBetween('code', [$base, $base + 999])
-            ->max('code');
-
-        return $maxCode ? $maxCode + 1 : $base;
-    }
-
-    /**
+     /**
      * Get the ledger entries for a specific account code.
      * Used for auditing and reconciliation.
      */
