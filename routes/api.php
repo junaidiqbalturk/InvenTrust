@@ -14,6 +14,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\BankReconciliationController;
 use App\Http\Controllers\Api\V1\ReportingController;
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\WarehouseController;
@@ -41,7 +42,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
     
     Route::apiResource('purchases', PurchaseController::class);
-    Route::post('purchases/{purchase}/pay', [PurchaseController::class, 'pay']);
+    // Bank Reconciliation
+    Route::prefix('reconciliation')->group(function () {
+        Route::get('/', [BankReconciliationController::class, 'index']);
+        Route::post('/upload', [BankReconciliationController::class, 'upload']);
+        Route::get('/statements/{statement}', [BankReconciliationController::class, 'show']);
+        Route::get('/transactions/{transaction}/matches', [BankReconciliationController::class, 'getMatches']);
+        Route::post('/transactions/{transaction}/reconcile', [BankReconciliationController::class, 'reconcile']);
+    });
     
     Route::get('payments/{payment}/receipt', [PaymentController::class, 'downloadReceipt']);
     Route::apiResource('payments', PaymentController::class);

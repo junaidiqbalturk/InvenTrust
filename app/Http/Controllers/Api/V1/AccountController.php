@@ -12,6 +12,11 @@ class AccountController extends Controller
 {
     use ApiResponse;
 
+    public function index()
+    {
+        return response()->json(Account::all());
+    }
+
     /**
      * Get the ledger entries for a specific account code.
      * Used for auditing and reconciliation.

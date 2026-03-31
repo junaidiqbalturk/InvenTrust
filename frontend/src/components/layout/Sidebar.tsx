@@ -55,6 +55,7 @@ export function Sidebar({ isCollapsed, onToggle, onHelpClick }: SidebarProps) {
         { name: "Purchases", href: "/purchases", icon: ShoppingCart, id: "sidebar-purchases", permission: "view_pos" },
         { name: "Ledger", href: "/ledger", icon: BookOpen, id: "sidebar-ledger", permission: "view_clients" },
         { name: "Payments", href: "/payments", icon: Receipt, id: "sidebar-payments", permission: "view_vouchers" },
+        { name: "Reconciliation", href: "/accounting/reconcile", icon: Check, id: "sidebar-reconciliation", permission: "view_vouchers" },
         { name: "Reports", href: "/reports", icon: PieChart, id: "sidebar-reports" },
     ];
 
