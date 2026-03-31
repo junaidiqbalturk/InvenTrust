@@ -81,7 +81,7 @@ class ReportingService
                 ->whereBetween('date', [$startDate, $endDate])
                 ->selectRaw('SUM(credit) - SUM(debit) as balance')
                 ->first()->balance ?? 0;
-            return ['name' => $acc->name, 'balance' => (float)$val];
+            return ['name' => $acc->name, 'code' => $acc->code, 'balance' => (float)$val];
         });
 
         // 2. COGS (Code 5000)
@@ -105,7 +105,7 @@ class ReportingService
                 ->whereBetween('date', [$startDate, $endDate])
                 ->selectRaw('SUM(debit) - SUM(credit) as balance')
                 ->first()->balance ?? 0;
-            return ['name' => $acc->name, 'balance' => (float)$val];
+            return ['name' => $acc->name, 'code' => $acc->code, 'balance' => (float)$val];
         });
 
         $totalRevenue = $revenue->sum('balance');
@@ -145,7 +145,7 @@ class ReportingService
                 ->where('date', '<=', $date)
                 ->selectRaw('SUM(debit) - SUM(credit) as balance')
                 ->first()->balance ?? 0;
-            return ['name' => $acc->name, 'balance' => (float)$val];
+            return ['name' => $acc->name, 'code' => $acc->code, 'balance' => (float)$val];
         });
 
         // Liabilities (2xxx)

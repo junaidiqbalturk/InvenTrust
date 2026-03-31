@@ -39,4 +39,9 @@ class LedgerEntry extends Model
     {
         return $this->morphTo();
     }
+
+    public function transaction()
+    {
+        return $this->belongsTo(JournalTransaction::class, 'transaction_id');
+    }
 }

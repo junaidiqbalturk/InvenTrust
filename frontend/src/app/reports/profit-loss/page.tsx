@@ -9,7 +9,9 @@ import {
     Calendar, 
     TrendingUp, 
     TrendingDown,
-    Loader2
+    Loader2,
+    History,
+    Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,6 +22,7 @@ import { toast } from "sonner";
 
 interface FinancialItem {
     name: string;
+    code?: string;
     balance: number;
 }
 
@@ -119,8 +122,17 @@ export default function ProfitLossReport() {
                             <Table>
                                 <TableBody>
                                     {data.revenue.map((item) => (
-                                        <TableRow key={item.name} className="border-none hover:bg-transparent">
-                                            <TableCell className="py-2">{item.name}</TableCell>
+                                        <TableRow key={item.name} className="border-none hover:bg-transparent group">
+                                            <TableCell className="py-2 flex items-center gap-2">
+                                                {item.name}
+                                                {item.code && (
+                                                    <Link href={`/reports/ledger-audit?account=${item.code}`}>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <History className="h-3 w-3 text-primary" />
+                                                        </Button>
+                                                    </Link>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-right py-2 font-medium">{formatCurrency(item.balance)}</TableCell>
                                         </TableRow>
                                     ))}
@@ -154,8 +166,17 @@ export default function ProfitLossReport() {
                             <Table>
                                 <TableBody>
                                     {data.expenses.map((item) => (
-                                        <TableRow key={item.name} className="border-none hover:bg-transparent">
-                                            <TableCell className="py-2">{item.name}</TableCell>
+                                        <TableRow key={item.name} className="border-none hover:bg-transparent group">
+                                            <TableCell className="py-2 flex items-center gap-2">
+                                                {item.name}
+                                                {item.code && (
+                                                    <Link href={`/reports/ledger-audit?account=${item.code}`}>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <History className="h-3 w-3 text-primary" />
+                                                        </Button>
+                                                    </Link>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-right py-2 font-medium">{formatCurrency(item.balance)}</TableCell>
                                         </TableRow>
                                     ))}

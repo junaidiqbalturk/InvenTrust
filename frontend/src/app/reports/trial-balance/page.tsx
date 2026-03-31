@@ -8,7 +8,8 @@ import {
     Printer, 
     PieChart, 
     Loader2,
-    Search
+    Search,
+    History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -150,9 +151,16 @@ export default function TrialBalance() {
                                 <TableCell className="py-4 font-mono font-bold text-amber-700">{acc.code}</TableCell>
                                 <TableCell className="py-4 font-medium">{acc.name}</TableCell>
                                 <TableCell className="py-4">
-                                    <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-tighter">
-                                        {acc.type}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-tighter">
+                                            {acc.type}
+                                        </Badge>
+                                        <Link href={`/reports/ledger-audit?account=${acc.code}`}>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+                                                <History className="h-3 w-3" />
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </TableCell>
                                 <TableCell className="text-right py-4 font-bold tabular-nums">
                                     {acc.debit > 0 ? formatCurrency(acc.debit) : "—"}
