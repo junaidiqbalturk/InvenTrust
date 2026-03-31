@@ -253,6 +253,9 @@ return new class extends Migration
             $table->string('code');
             $table->unique(['company_id', 'code']);
             $table->enum('type', ['asset', 'liability', 'equity', 'income', 'expense']);
+            $table->foreignId('parent_id')->nullable()->constrained('accounts')->onDelete('cascade');
+            $table->text('description')->nullable();
+            $table->boolean('is_system')->default(false);
             $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
             $table->timestamps();
         });

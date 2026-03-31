@@ -16,7 +16,9 @@ import {
     Loader2,
     BarChart3,
     LineChart,
-    CheckCircle2
+    CheckCircle2,
+    FolderTree,
+    Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -56,6 +58,7 @@ interface DashboardData {
     total_reconciled: number;
     recent_actions: any[];
   };
+  coa_count: number;
 }
 
 export default function DashboardPage() {
@@ -96,6 +99,33 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
+      {data?.coa_count && data.coa_count < 10 && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative overflow-hidden p-8 rounded-[2.5rem] bg-primary/10 border border-primary/20 flex flex-col md:flex-row items-center justify-between gap-6 group"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <FolderTree className="h-40 w-40 text-primary" />
+          </div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <Sparkles className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-white leading-tight">Complete Your Financial Foundation</h2>
+              <p className="text-slate-400 font-medium max-w-md mt-1">We noticed your ledger is minimal. Define your specific business accounts (Rent, Salaries, etc.) to get accurate financial reports.</p>
+            </div>
+          </div>
+          <Button 
+            onClick={() => window.location.href = '/accounting/accounts'}
+            className="h-14 px-8 bg-white text-primary hover:bg-slate-100 font-black rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95 relative z-10"
+          >
+            Configure Ledger <ArrowUpRight className="ml-2 h-5 w-5" />
+          </Button>
+        </motion.div>
+      )}
+
       <div className="flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground">Overview</h1>

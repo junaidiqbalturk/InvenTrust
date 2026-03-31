@@ -21,4 +21,14 @@ trait ApiResponse
             'data' => $data
         ], $code);
     }
+
+    protected function success($data, $message = null, $code = 200)
+    {
+        return $this->successResponse($data, $message, $code);
+    }
+
+    protected function error($message = null, $code = 400, $data = null)
+    {
+        return $this->errorResponse($message, $code, $data);
+    }
 }

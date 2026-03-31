@@ -14,7 +14,89 @@ class AccountController extends Controller
 
     public function index()
     {
-        return response()->json(Account::all());
+        // Fetch root accounts with all children recursively
+        $accounts = Account::isRoot()
+            ->with(['allChildren', 'children'])
+            ->get();
+            
+        return $this->success($accounts);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:asset,liability,equity,income,expense',
+            'parent_id' => 'nullable|exists:accounts,id',
+            'description' => 'nullable|string',
+            'code' => 'nullable|string|max:20',
+            'auto_code' => 'boolean'
+        ]);
+
+        // Logic for Recommended Numbering
+        if ($request->auto_code || empty($validated['code'])) {
+            $validated['code'] = $this->generateRecommendedCode($validated['type']);
+        }
+
+        $account = Account::create($validated);
+
+        return $this->success($account, 'Account created successfully', 201);
+    }
+
+    public function update(Request $request, Account $account)
+    {
+        if ($account->is_system) {
+            return $this->error('System accounts cannot be modified', 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'parent_id' => 'nullable|exists:accounts,id',
+            'description' => 'nullable|string',
+            'code' => 'sometimes|required|string|max:20|unique:accounts,code,' . $account->id . ',id,company_id,' . $account->company_id,
+        ]);
+
+        $account->update($validated);
+
+        return $this->success($account, 'Account updated successfully');
+    }
+
+    public function destroy(Account $account)
+    {
+        if ($account->is_system) {
+            return $this->error('System accounts are protected and cannot be deleted', 403);
+        }
+
+        if ($account->children()->exists()) {
+            return $this->error('Cannot delete account with sub-accounts. Move or delete children first.', 422);
+        }
+
+        $account->delete();
+
+        return $this->success(null, 'Account deleted successfully');
+    }
+
+    /**
+     * Generate a code based on typical accounting ranges:
+     * Assets: 1000s, Liabilities: 2000s, Equity: 3000s, Income: 4000s, Expenses: 5000s
+     */
+    private function generateRecommendedCode($type)
+    {
+        $ranges = [
+            'asset' => 1000,
+            'liability' => 2000,
+            'equity' => 3000,
+            'income' => 4000,
+            'expense' => 5000,
+        ];
+
+        $base = $ranges[$type];
+        $maxCode = Account::where('type', $type)
+            ->where('code', 'REGEXP', '^[0-9]+$')
+            ->whereBetween('code', [$base, $base + 999])
+            ->max('code');
+
+        return $maxCode ? $maxCode + 1 : $base;
     }
 
     /**

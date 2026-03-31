@@ -87,7 +87,8 @@ class DashboardController extends Controller
                             'date' => $t->updated_at->diffForHumans(),
                         ];
                     })
-            ]
+            ],
+            'coa_count' => \App\Models\Account::count()
         ]);
     }
 }

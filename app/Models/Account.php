@@ -13,7 +13,14 @@ class Account extends Model
         'name',
         'code',
         'type',
+        'parent_id',
+        'description',
+        'is_system',
         'company_id',
+    ];
+
+    protected $casts = [
+        'is_system' => 'boolean',
     ];
 
     public function ledgerEntries()
@@ -21,20 +28,49 @@ class Account extends Model
         return $this->hasMany(LedgerEntry::class);
     }
 
+    public function children()
+    {
+        return $this->hasMany(Account::class, 'parent_id');
+    }
+
+    public function allChildren()
+    {
+        return $this->children()->with('allChildren');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Account::class, 'parent_id');
+    }
+
+    public function scopeIsRoot($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    public function scopeIsSystem($query)
+    {
+        return $query->where('is_system', true);
+    }
+
     /**
-     * Get the balance of the account.
+     * Get the balance of the account, optionally including children.
      */
-    public function getBalance()
+    public function getBalance($includeChildren = true)
     {
         $debits = $this->ledgerEntries()->sum('debit');
         $credits = $this->ledgerEntries()->sum('credit');
 
-        // Assets and Expenses have debit balances
-        if (in_array($this->type, ['asset', 'expense'])) {
-            return $debits - $credits;
+        $selfBalance = in_array($this->type, ['asset', 'expense']) 
+            ? $debits - $credits 
+            : $credits - $debits;
+
+        if ($includeChildren && $this->children()->exists()) {
+            foreach ($this->children as $child) {
+                $selfBalance += $child->getBalance(true);
+            }
         }
 
-        // Liabilities, Equity, and Income have credit balances
-        return $credits - $debits;
+        return $selfBalance;
     }
 }

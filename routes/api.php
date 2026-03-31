@@ -119,6 +119,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('inventory-valuation/auto-fix', [ReportingController::class, 'autoFixInventory']);
     });
 
+    Route::apiResource('accounts', AccountController::class);
     Route::get('accounts/{code}/ledger', [AccountController::class, 'ledger']);
 });
 
