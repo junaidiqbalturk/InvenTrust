@@ -36,7 +36,17 @@ class ProductController extends Controller
         }
 
         $product = Product::create($validator->validated());
-        return $this->successResponse($product, 'Product created successfully', 211);
+
+        // Record Initial Stock in Ledger if provided
+        if ($product->stock_quantity > 0) {
+            \App\Services\StockService::recordAdjustment(
+                $product, 
+                $product->stock_quantity, 
+                "Initial stock on creation"
+            );
+        }
+
+        return $this->successResponse($product, 'Product created successfully', 201);
     }
 
     public function show(Product $product)

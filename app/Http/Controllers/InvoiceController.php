@@ -130,7 +130,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        return $invoice->load(['party', 'items.product', 'ledgerEntries']);
+        return $invoice->load(['party', 'items.product', 'ledgerEntries', 'company']);
     }
 
     public function destroy(Invoice $invoice)

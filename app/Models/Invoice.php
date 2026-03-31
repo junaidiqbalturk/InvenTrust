@@ -23,6 +23,11 @@ class Invoice extends Model
         'status',
     ];
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function party()
     {
         return $this->belongsTo(Party::class);

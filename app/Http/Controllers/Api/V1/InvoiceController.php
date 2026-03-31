@@ -87,7 +87,7 @@ class InvoiceController extends Controller
                 }
             }
 
-            // 1. Post Invoice Transaction
+            // 1. Post Invoice Transaction (Accounts Receivable vs Sales Revenue)
             $invoiceEntries = [
                 [
                     'account_code' => '1200', // Accounts Receivable
@@ -98,7 +98,7 @@ class InvoiceController extends Controller
                 [
                     'account_code' => '4000', // Sales Revenue
                     'debit' => 0,
-                    'credit' => $final_amount, // For simplicity, putting total in revenue (can split tax if account exists)
+                    'credit' => $final_amount,
                     'party_id' => null,
                 ]
             ];
@@ -109,6 +109,40 @@ class InvoiceController extends Controller
                 $invoiceEntries,
                 $invoice
             );
+
+            // 1b. Post Inventory vs COGS Transaction (Perpetual Inventory)
+            $totalCogs = 0;
+            foreach ($request->items as $itemData) {
+                $product = Product::find($itemData['product_id']);
+                if ($product) {
+                    $totalCogs += $itemData['quantity'] * $product->purchase_price;
+                }
+            }
+
+            if ($totalCogs > 0) {
+                $cogsEntries = [
+                    [
+                        'account_code' => '5000', // COGS (Cost of Goods Sold)
+                        'debit' => $totalCogs,
+                        'credit' => 0,
+                        'party_id' => null,
+                    ],
+                    [
+                        'account_code' => '1300', // Inventory (Asset)
+                        'debit' => 0,
+                        'credit' => $totalCogs,
+                        'party_id' => null,
+                    ]
+                ];
+
+                AccountingService::postTransaction(
+                    "COGS for Invoice: {$invoice->invoice_no}",
+                    $request->date,
+                    $cogsEntries,
+                    $invoice
+                );
+            }
+
 
             // 2. Post Payment Transaction (if any)
             if ($paid_amount > 0) {
