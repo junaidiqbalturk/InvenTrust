@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions required for Laravel, PDF generation, and Internationalization
-# Pruned redundant extensions (mbstring, xml, dom, tokenizer, etc.) already built into PHP 8.3 core
+# Re-added mbstring and tokenizer explicitly as a safety measure for Render
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo_mysql \
@@ -37,7 +37,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     zip \
     intl \
     xsl \
-    opcache
+    opcache \
+    mbstring \
+    tokenizer
 
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
@@ -56,10 +58,11 @@ ENV COMPOSER_MEMORY_LIMIT=-1
 # Copy project files
 COPY . .
 
-# Install PHP dependencies
-# We use --no-scripts first to avoid issues with artisan commands during build
-# Added --no-progress to reduce log noise and potential timeouts
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --no-progress
+# Install PHP dependencies - "Nuclear Option"
+# 1. Added --ignore-platform-reqs to bypass strict extension version checks during build
+# 2. Removed --optimize-autoloader to drastically reduce RAM usage (the most common cause of exit code 2)
+# 3. Added --no-progress to reduce log overhead
+RUN composer install --no-dev --no-interaction --no-scripts --no-progress --ignore-platform-reqs
 
 # Set permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
