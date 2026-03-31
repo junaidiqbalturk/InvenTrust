@@ -235,7 +235,7 @@ export function TransactionDetailModal({ type, id, onClose, onActionComplete }: 
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <p className="font-bold text-xl text-foreground">
-                                                {data.client?.company_name || data.vendor?.company_name || 'System Entity'}
+                                                {data.party?.name || data.client?.company_name || data.vendor?.company_name || data.client?.name || 'System Entity'}
                                             </p>
                                             <button 
                                                 onClick={() => {
