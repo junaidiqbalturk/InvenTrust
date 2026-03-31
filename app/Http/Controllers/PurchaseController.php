@@ -121,4 +121,48 @@ class PurchaseController extends Controller
             return response()->noContent();
         });
     }
+
+    public function pay(Request $request, Purchase $purchase)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . ($purchase->due_amount + 0.01),
+            'date' => 'required|date',
+            'method' => 'required|in:cash,bank',
+            'reference' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($validated, $purchase) {
+            $payment = \App\Models\Payment::create([
+                'party_id' => $purchase->party_id,
+                'date' => $validated['date'],
+                'amount' => $validated['amount'],
+                'method' => $validated['method'],
+                'type' => 'outgoing',
+                'reference' => $validated['reference'] ?? 'Settle payment for ' . $purchase->purchase_no,
+            ]);
+
+            $purchase->increment('paid_amount', $validated['amount']);
+            $purchase->decrement('due_amount', $validated['amount']);
+            
+            $purchase->refresh();
+            $purchase->status = ($purchase->due_amount <= 0) ? 'paid' : 'partial';
+            $purchase->save();
+
+            $methodAccount = $validated['method'] === 'cash' ? '1001' : '1002';
+            
+            AccountingService::postTransaction(
+                'Payment made for ' . $purchase->purchase_no,
+                $validated['date'],
+                [
+                    // Debit Accounts Payable (Liability decreases)
+                    ['account_code' => '2100', 'debit' => $validated['amount'], 'party_id' => $purchase->party_id],
+                    // Credit Cash/Bank (Asset decreases)
+                    ['account_code' => $methodAccount, 'credit' => $validated['amount']]
+                ],
+                $payment
+            );
+
+            return $purchase->load(['party', 'ledgerEntries']);
+        });
+    }
 }

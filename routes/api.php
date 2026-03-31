@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\Api\V1\ReportingController;
+use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\WarehouseController;
 
 
@@ -40,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
     
     Route::apiResource('purchases', PurchaseController::class);
+    Route::post('purchases/{purchase}/pay', [PurchaseController::class, 'pay']);
     
     Route::get('payments/{payment}/receipt', [PaymentController::class, 'downloadReceipt']);
     Route::apiResource('payments', PaymentController::class);
@@ -67,6 +69,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('profit-loss', [ReportingController::class, 'profitAndLoss']);
         Route::get('balance-sheet', [ReportingController::class, 'balanceSheet']);
         Route::get('inventory-valuation', [ReportingController::class, 'inventoryValuation']);
+        Route::post('inventory-valuation/auto-fix', [ReportingController::class, 'autoFixInventory']);
     });
+
+    Route::get('accounts/{code}/ledger', [AccountController::class, 'ledger']);
 });
 

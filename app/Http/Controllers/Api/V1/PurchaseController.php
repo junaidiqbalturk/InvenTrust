@@ -136,4 +136,52 @@ class PurchaseController extends Controller
     {
         return $this->successResponse($purchase->load('items.product', 'party'), 'Purchase retrieved successfully');
     }
+
+    public function pay(Request $request, Purchase $purchase)
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|numeric|min:0.01|max:' . ($purchase->due_amount + 0.01),
+            'date' => 'required|date',
+            'method' => 'required|in:cash,bank',
+            'reference' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation Error', 422, $validator->errors());
+        }
+
+        return DB::transaction(function () use ($request, $purchase) {
+            $payment = \App\Models\Payment::create([
+                'party_id' => $purchase->party_id,
+                'date' => $request->date,
+                'amount' => $request->amount,
+                'method' => $request->method,
+                'type' => 'outgoing',
+                'reference' => $request->reference ?? 'Settle payment for ' . $purchase->purchase_no,
+            ]);
+
+            $purchase->increment('paid_amount', $request->amount);
+            $purchase->decrement('due_amount', $request->amount);
+            
+            $purchase->refresh();
+            $purchase->status = ($purchase->due_amount <= 0) ? 'paid' : 'partial';
+            $purchase->save();
+
+            $methodAccount = $request->method === 'cash' ? '1001' : '1002';
+            
+            AccountingService::postTransaction(
+                'Payment made for ' . $purchase->purchase_no,
+                $request->date,
+                [
+                    // Debit Accounts Payable (Liability decreases)
+                    ['account_code' => '2100', 'debit' => $request->amount, 'party_id' => $purchase->party_id],
+                    // Credit Cash/Bank (Asset decreases)
+                    ['account_code' => $methodAccount, 'credit' => $request->amount]
+                ],
+                $payment
+            );
+
+            return $this->successResponse($purchase->load(['party', 'ledgerEntries']), 'Payment recorded and posted to ledger successfully');
+        });
+    }
 }

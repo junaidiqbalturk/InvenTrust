@@ -53,6 +53,14 @@ export default function PurchasesPage() {
     // Quick Add Contact Modal
     const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
 
+    // Payment Modal states
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [selectedPurchaseForPayment, setSelectedPurchaseForPayment] = useState<Purchase | null>(null);
+    const [quickPaymentAmount, setQuickPaymentAmount] = useState(0);
+    const [quickPaymentMethod, setQuickPaymentMethod] = useState("cash");
+    const [quickPaymentDate, setQuickPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -126,6 +134,27 @@ export default function PurchasesPage() {
         }
     };
 
+    const handleQuickPayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedPurchaseForPayment || quickPaymentAmount <= 0) return;
+
+        try {
+            setIsSubmittingPayment(true);
+            await api.post(`/purchases/${selectedPurchaseForPayment.id}/pay`, {
+                amount: quickPaymentAmount,
+                method: quickPaymentMethod,
+                date: quickPaymentDate,
+            });
+            toast.success("Payment recorded successfully");
+            setIsPaymentModalOpen(false);
+            fetchData();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to record payment");
+        } finally {
+            setIsSubmittingPayment(false);
+        }
+    };
+
     return (
         <div className="p-8 space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
@@ -158,12 +187,13 @@ export default function PurchasesPage() {
                                     <TableHead>Paid</TableHead>
                                     <TableHead>Due</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {purchases.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                                        <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                                             No purchases found.
                                         </TableCell>
                                     </TableRow>
@@ -175,15 +205,31 @@ export default function PurchasesPage() {
                                             <TableCell>{new Date(pur.date).toLocaleDateString()}</TableCell>
                                             <TableCell className="font-bold">${Number(pur.total_amount).toFixed(2)}</TableCell>
                                             <TableCell className="text-green-600">${Number(pur.paid_amount).toFixed(2)}</TableCell>
-                                            <TableCell className="text-rose-600">${Number(pur.due_amount).toFixed(2)}</TableCell>
+                                            <TableCell className="text-rose-600 font-bold">${Number(pur.due_amount).toFixed(2)}</TableCell>
                                             <TableCell>
-                                                <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                                     pur.status === 'paid' ? 'bg-green-100 text-green-700' : 
                                                     pur.status === 'partial' ? 'bg-amber-100 text-amber-700' : 
-                                                    'bg-red-100 text-red-700'
+                                                    'bg-rose-100 text-rose-700'
                                                 }`}>
                                                     {pur.status}
                                                 </span>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {Number(pur.due_amount) > 0 && (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="h-8 text-xs font-bold border-emerald-500/20 text-emerald-600 hover:bg-emerald-50"
+                                                        onClick={() => {
+                                                            setSelectedPurchaseForPayment(pur);
+                                                            setQuickPaymentAmount(Number(pur.due_amount));
+                                                            setIsPaymentModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <DollarSign className="h-3 w-3 mr-1" /> Pay
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -401,6 +447,77 @@ export default function PurchasesPage() {
                     setSelectedParty(newParty.id.toString());
                 }}
             />
+
+            <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+                <DialogContent className="max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <DollarSign className="h-5 w-5 text-emerald-600" />
+                            Record Purchase Payment
+                        </DialogTitle>
+                        <DialogDescription>
+                            Enter payment details for purchase <strong>{selectedPurchaseForPayment?.purchase_no}</strong>.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleQuickPayment} className="space-y-5 pt-4">
+                        <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 mb-2">
+                            <div className="flex justify-between items-center text-xs text-emerald-700 font-bold uppercase tracking-wider mb-1">
+                                <span>Outstanding Balance</span>
+                                <span>$ {Number(selectedPurchaseForPayment?.due_amount).toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold text-muted-foreground uppercase">Amount Paid</Label>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        type="number" 
+                                        step="0.01" 
+                                        className="pl-9 h-11 font-bold text-lg" 
+                                        value={quickPaymentAmount} 
+                                        onChange={e => setQuickPaymentAmount(parseFloat(e.target.value))} 
+                                        max={selectedPurchaseForPayment?.due_amount}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-muted-foreground uppercase">Payment Date</Label>
+                                    <Input type="date" className="h-11" value={quickPaymentDate} onChange={e => setQuickPaymentDate(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-muted-foreground uppercase">Method</Label>
+                                    <Select value={quickPaymentMethod} onValueChange={(val) => val && setQuickPaymentMethod(val)}>
+                                        <SelectTrigger className="h-11">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="bank">Bank Transfer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <DialogFooter className="pt-4">
+                            <Button type="submit" disabled={isSubmittingPayment} className="w-full h-12 text-lg font-bold bg-emerald-600 hover:bg-emerald-700">
+                                {isSubmittingPayment ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Recording...
+                                    </>
+                                ) : (
+                                    "Confirm Payment"
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
