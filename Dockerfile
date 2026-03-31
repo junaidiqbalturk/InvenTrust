@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libicu-dev \
-    libxslt-dev \
+    libxslt1-dev \
     libwebp-dev \
     libxpm-dev \
     libsqlite3-dev \
@@ -26,27 +26,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions required for Laravel, PDF generation, and Internationalization
-# Using a more explicit list to ensure all micro-requirements are met
+# Pruned redundant extensions (mbstring, xml, dom, tokenizer, etc.) already built into PHP 8.3 core
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo_mysql \
-    mbstring \
     exif \
     pcntl \
     bcmath \
     gd \
     zip \
     intl \
-    xml \
     xsl \
-    opcache \
-    dom \
-    simplexml \
-    xmlwriter \
-    xmlreader \
-    tokenizer \
-    fileinfo \
-    sodium
+    opcache
 
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
