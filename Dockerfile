@@ -3,20 +3,10 @@ FROM php:8.3-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
     zip \
     unzip \
     git \
     curl \
-    libzip-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libicu-dev \
-    libxslt1-dev \
-    libwebp-dev \
-    libxpm-dev \
     libsqlite3-dev \
     libsodium-dev \
     zlib1g-dev \
@@ -25,10 +15,13 @@ RUN apt-get update && apt-get install -y \
     libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
+# Add the mlocati/php-extension-installer to simplify PHP extension management
+# This tool automatically installs required system dependencies for extensions
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
 # Install PHP extensions required for Laravel, PDF generation, and Internationalization
-# Re-added mbstring and tokenizer explicitly as a safety measure for Render
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install \
+# We removed 'tokenizer' as it is already part of the PHP 8.3 core
+RUN install-php-extensions \
     pdo_mysql \
     exif \
     pcntl \
@@ -38,8 +31,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     intl \
     xsl \
     opcache \
-    mbstring \
-    tokenizer
+    mbstring
 
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
