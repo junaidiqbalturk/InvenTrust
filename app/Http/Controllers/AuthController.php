@@ -133,4 +133,9 @@ class AuthController extends Controller
             'user' => $user->load(['role.permissions', 'company'])
         ]);
     }
+
+    public function me(Request $request)
+    {
+        return $request->user()->load(['role.permissions', 'company']);
+    }
 }

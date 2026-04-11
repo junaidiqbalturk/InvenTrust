@@ -25,9 +25,7 @@ Route::post('/login', [AuthController::class , 'login']);
 Route::post('/register-company', [AuthController::class, 'registerCompany']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user()->load(['role.permissions', 'company']);
-    });
+    Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class , 'logout']);
     Route::post('/complete-onboarding', [AuthController::class, 'completeOnboarding']);
     
