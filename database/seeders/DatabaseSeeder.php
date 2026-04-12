@@ -18,10 +18,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Create GLOBAL Admin Role Template
-        $adminTemplate = Role::create([
+        $adminTemplate = Role::firstOrCreate([
             'name' => 'Admin',
-            'description' => 'Full system access',
             'company_id' => null, // Explicitly global
+        ], [
+            'description' => 'Full system access',
         ]);
 
         $permissions = [
@@ -34,14 +35,17 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($permissions as $p) {
-            $permission = \App\Models\Permission::create(['name' => $p]);
-            $adminTemplate->permissions()->attach($permission->id);
+            $permission = \App\Models\Permission::firstOrCreate(['name' => $p]);
+            if (!$adminTemplate->permissions()->where('permission_id', $permission->id)->exists()) {
+                $adminTemplate->permissions()->attach($permission->id);
+            }
         }
 
         // 2. Create Default Company
-        $company = Company::create([
-            'company_name' => 'InvenTrust Demo',
+        $company = Company::firstOrCreate([
             'email' => 'admin@inventrust.com',
+        ], [
+            'company_name' => 'InvenTrust Demo',
             'industry' => 'Electronics',
             'settings' => [
                 'enable_multi_warehouse' => false,
@@ -53,10 +57,11 @@ class DatabaseSeeder extends Seeder
         $roleService = new \App\Services\RoleService();
         $companyAdminRole = $roleService->cloneTemplatesForCompany($company);
         // 4. Create Default Warehouse
-        $warehouse = Warehouse::create([
-            'name' => 'Main Warehouse',
-            'location' => 'Headquarters',
+        $warehouse = Warehouse::firstOrCreate([
             'company_id' => $company->id,
+            'name' => 'Main Warehouse',
+        ], [
+            'location' => 'Headquarters',
             'is_active' => true,
         ]);
 
@@ -68,9 +73,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 5. Create Default User with the COMPANY-SPECIFIC Role
-        User::create([
-            'name' => 'Admin User',
+        User::firstOrCreate([
             'email' => 'admin@inventrust.com',
+        ], [
+            'name' => 'Admin User',
             'password' => Hash::make('password'),
             'company_id' => $company->id,
             'role_id' => $companyAdminRole->id,
@@ -90,9 +96,10 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($accounts as $accountData) {
-            Account::create(array_merge($accountData, [
-                'company_id' => $company->id
-            ]));
+            Account::firstOrCreate([
+                'company_id' => $company->id,
+                'code' => $accountData['code'],
+            ], $accountData);
         }
     }
 }

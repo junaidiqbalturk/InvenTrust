@@ -20,10 +20,11 @@ class RoleService
         $companyAdminRole = null;
 
         foreach ($templates as $template) {
-            $newRole = Role::create([
+            $newRole = Role::updateOrCreate([
                 'name' => $template->name,
-                'description' => $template->description,
                 'company_id' => $company->id
+            ], [
+                'description' => $template->description,
             ]);
 
             // Copy permissions
@@ -36,10 +37,11 @@ class RoleService
 
         // Fallback if no Admin template exists
         if (!$companyAdminRole) {
-            $companyAdminRole = Role::create([
+            $companyAdminRole = Role::updateOrCreate([
                 'name' => 'Admin',
-                'description' => 'Full system access',
                 'company_id' => $company->id
+            ], [
+                'description' => 'Full system access',
             ]);
         }
 
