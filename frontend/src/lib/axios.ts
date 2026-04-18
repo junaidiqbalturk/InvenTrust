@@ -27,10 +27,17 @@ api.interceptors.response.use(
     (error) => {
         if (!error.response) {
             // Network error (server is down or connection refused)
+            console.error('Network Error Details:', {
+                message: error.message,
+                config: error.config,
+                code: error.code,
+                request: error.request
+            });
+
             if (typeof window !== 'undefined') {
                 const url = error.config?.baseURL + (error.config?.url || '');
-                toast.error(`Network Error: Backend unreachable at ${url}. Check Vercel Env Vars.`, {
-                    duration: 7000,
+                toast.error(`Network Error: Backend unreachable at ${url}. Check Render/Vercel Env Vars and CORS logs.`, {
+                    duration: 10000,
                     id: "network-error"
                 });
             }
