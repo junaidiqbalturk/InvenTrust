@@ -60,13 +60,12 @@ RUN composer install --no-dev --no-interaction --no-scripts --no-progress --igno
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Update Apache configuration to serve from /public and allow .htaccess overrides
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
-    && echo '<Directory /var/www/html/public>\n\
-    Options Indexes FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
+# Configure Apache for Laravel
+# 1. Copy our custom configuration
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+
+# 2. Enable mod_rewrite and our site
+RUN a2enmod rewrite
 
 # Expose port 80
 EXPOSE 80
