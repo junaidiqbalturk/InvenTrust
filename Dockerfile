@@ -62,10 +62,13 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 # Configure Apache for Laravel
 # 1. Copy our custom configuration
-COPY apache.conf /etc/apache2/sites-available/000-default.conf
+COPY apache.conf /etc/apache2/sites-available/laravel.conf
 
-# 2. Enable mod_rewrite and our site
-RUN a2enmod rewrite
+# 2. Enable mod_rewrite, our new site, and disable the default site
+RUN a2enmod rewrite \
+    && a2dissite 000-default.conf \
+    && a2ensite laravel.conf \
+    && sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
 # Expose port 80
 EXPOSE 80

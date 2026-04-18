@@ -1,0 +1,3 @@
+InvenTrust Backend Diagnostic: Connectivity Successful.
+This file confirms that Apache is correctly serving from the /public directory.
+If you can see this, but /up still 404s, then URL Rewriting (mod_rewrite) is the problem.
